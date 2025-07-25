@@ -1,0 +1,73 @@
+spring:
+  application:
+    name: agentic-workflow-engine
+  
+  # OpenAI Configuration
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:your-api-key-here}
+      chat:
+        options:
+          model: gpt-4
+          temperature: 0.7
+          max-tokens: 1000
+  
+  # Database Configuration
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/agentic_workflow}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+  
+  # Spring Data JDBC Configuration
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+# Server Configuration
+server:
+  port: 8080
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,env,loggers
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: always
+    info:
+      enabled: true
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Application Information
+info:
+  app:
+    name: '@project.name@'
+    description: '@project.description@'
+    version: '@project.version@'
+    java-version: '@java.version@'
+  build:
+    artifact: '@project.artifactId@'
+    group: '@project.groupId@'
+
+# Logging
+logging:
+  level:
+    dev.alsalman.agenticworkflowengine: DEBUG
+    org.springframework.web: INFO
+    org.springframework.ai: INFO
