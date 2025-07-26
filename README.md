@@ -352,16 +352,14 @@ The system intelligently executes tasks in parallel based on their dependencies:
 ### Example: Vacation Planning
 ```
 TASKS:
-1. Research destinations
-2. Check weather patterns  
-3. Find flights (depends on 1 - blocking)
-4. Book accommodation (depends on 1, 3 - blocking)
-5. Plan daily activities (depends on 1, 2 - informational)
+1. Research and create a daily itinerary for a 3-day trip to Paris.
+2. Research and compile a list of 5 highly-rated French restaurants in Paris.
+3. Research and summarize the public transportation options available in Paris.
+4. Create a final, integrated travel plan document. (depends on 1, 2, 3 - blocking)
 
 EXECUTION BATCHES:
-Batch 1: [Task 1] (no dependencies)
-Batch 2: [Task 2, Task 3] (parallel - dependencies satisfied)  
-Batch 3: [Task 4, Task 5] (parallel - dependencies satisfied)
+Batch 1: [Task 1, Task 2, Task 3] (parallel - no dependencies)
+Batch 2: [Task 4] (depends on all previous tasks)
 ```
 
 This approach maximizes efficiency while ensuring correct execution order.

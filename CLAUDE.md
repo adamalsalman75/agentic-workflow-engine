@@ -7,7 +7,7 @@ This is a Spring Boot application built with Java 24 that integrates Spring AI w
 
 ## Core Architecture
 The system uses AI agents with intelligent parallel task execution:
-- **TaskPlan Agent**: Creates task plans with dependency analysis (blocking vs informational)
+- **TaskPlan Agent**: Creates flexible task plans, identifying independent tasks for parallel execution and creating dependencies only when logically necessary.
 - **TaskAgent**: Executes tasks with context from completed dependencies
 - **GoalAgent**: Summarizes workflow execution results
 - **WorkflowOrchestrator**: Coordinates parallel execution based on task dependencies
