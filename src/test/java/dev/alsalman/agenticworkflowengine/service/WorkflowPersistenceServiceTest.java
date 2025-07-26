@@ -204,8 +204,12 @@ class WorkflowPersistenceServiceTest {
         // Then
         assertThat(foundGoal).isNotNull();
         assertThat(foundGoal.id()).isEqualTo(savedGoal.id());
-        assertThat(foundGoal.tasks()).hasSize(2);
-        assertThat(foundGoal.tasks())
+        assertThat(foundGoal.tasks()).isEmpty(); // Goal endpoint no longer includes tasks
+        
+        // Verify tasks are accessible via separate endpoint
+        List<Task> tasks = persistenceService.findTasksByGoalId(savedGoal.id());
+        assertThat(tasks).hasSize(2);
+        assertThat(tasks)
             .extracting(Task::description)
             .containsExactlyInAnyOrder("Complete first task", "Complete second task");
     }
@@ -303,9 +307,13 @@ class WorkflowPersistenceServiceTest {
         
         // Then - verify all changes are persisted correctly
         Goal foundGoal = persistenceService.findGoalById(savedGoal.id());
-        assertThat(foundGoal.tasks()).hasSize(2);
+        assertThat(foundGoal.tasks()).isEmpty(); // Goal endpoint no longer includes tasks
         
-        Task foundUpdatedTask = foundGoal.tasks().stream()
+        // Verify tasks via separate endpoint
+        List<Task> tasks = persistenceService.findTasksByGoalId(savedGoal.id());
+        assertThat(tasks).hasSize(2);
+        
+        Task foundUpdatedTask = tasks.stream()
             .filter(t -> t.id().equals(savedTask1.id()))
             .findFirst()
             .orElseThrow();

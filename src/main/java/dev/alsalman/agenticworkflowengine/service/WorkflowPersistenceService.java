@@ -102,12 +102,11 @@ public class WorkflowPersistenceService {
             return null;
         }
         
-        // Load tasks separately
-        List<Task> tasks = findTasksByGoalId(goalId);
+        // Return goal without tasks - use /tasks endpoint for task details
         return new Goal(
             entity.id(),
             entity.query(),
-            tasks,
+            List.of(), // Empty task list - use dedicated /tasks endpoint
             entity.summary(),
             entity.status(),
             entity.createdAt(),
