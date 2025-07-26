@@ -17,24 +17,68 @@ public class TaskAgent {
     }
     
     public Task executeTask(Task task, String originalGoal, List<Task> completedTasks) {
-        String completedTasksContext = completedTasks.stream()
-            .limit(3)
-            .map(completedTask -> "- " + limitText(completedTask.description(), 80) + 
-                                " (" + limitText(completedTask.result(), 100) + ")")
-            .reduce("", (acc, taskInfo) -> acc + taskInfo + "\n");
+        // Filter completed tasks to only include actual dependencies
+        List<Task> dependencyTasks = completedTasks.stream()
+            .filter(completed -> {
+                var blockingDeps = task.blockingDependencies();
+                var informationalDeps = task.informationalDependencies();
+                return (blockingDeps != null && blockingDeps.contains(completed.id())) || 
+                       (informationalDeps != null && informationalDeps.contains(completed.id()));
+            })
+            .toList();
             
-        String prompt = """
-            Execute: %s
-            
-            Goal: %s
-            
-            Previous:
-            %s
-            
-            Provide specific, actionable result:
-            """.formatted(task.description(), 
-                        limitText(originalGoal, 150), 
-                        completedTasksContext);
+        String dependencyContext;
+        String prompt;
+        
+        if (!dependencyTasks.isEmpty()) {
+            // Build dependency-specific context
+            dependencyContext = dependencyTasks.stream()
+                .map(dep -> {
+                    var blockingDeps = task.blockingDependencies();
+                    String depType = (blockingDeps != null && blockingDeps.contains(dep.id())) ? "REQUIRED" : "REFERENCE";
+                    return String.format("%s DEPENDENCY: %s\nResult: %s", 
+                                       depType,
+                                       limitText(dep.description(), 100),
+                                       limitText(dep.result(), 300));
+                })
+                .reduce("", (acc, depInfo) -> acc + depInfo + "\n\n");
+                
+            prompt = """
+                Execute: %s
+                
+                Overall Goal: %s
+                
+                DEPENDENCY OUTPUTS (use these results to complete your task):
+                %s
+                
+                IMPORTANT: Your task should build upon and reference the dependency outputs above.
+                Use specific information from the completed dependencies to inform your work.
+                
+                Provide specific, actionable result:
+                """.formatted(task.description(), 
+                            limitText(originalGoal, 150), 
+                            dependencyContext);
+        } else {
+            // No dependencies - provide general context from recent completed tasks
+            String generalContext = completedTasks.stream()
+                .limit(3)
+                .map(completed -> "- " + limitText(completed.description(), 80) + 
+                                " (" + limitText(completed.result(), 100) + ")")
+                .reduce("", (acc, taskInfo) -> acc + taskInfo + "\n");
+                
+            prompt = """
+                Execute: %s
+                
+                Goal: %s
+                
+                Previous completed tasks (for context):
+                %s
+                
+                Provide specific, actionable result:
+                """.formatted(task.description(), 
+                            limitText(originalGoal, 150), 
+                            generalContext);
+        }
             
         try {
             String result = resilientChatClient.call("task execution", prompt);
