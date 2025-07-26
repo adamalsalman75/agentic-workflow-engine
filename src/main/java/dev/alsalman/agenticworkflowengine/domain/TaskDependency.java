@@ -1,6 +1,7 @@
 package dev.alsalman.agenticworkflowengine.domain;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.Instant;
@@ -11,7 +12,7 @@ public record TaskDependency(
     @Id UUID id,
     UUID taskId,
     UUID dependsOnTaskId,
-    DependencyType type,
+    @Column("dependency_type") DependencyType type,
     String reason,
     Instant createdAt
 ) {
