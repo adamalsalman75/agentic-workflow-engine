@@ -1,6 +1,7 @@
 package dev.alsalman.agenticworkflowengine.repository;
 
 import dev.alsalman.agenticworkflowengine.domain.TaskEntity;
+import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -17,6 +18,7 @@ public interface TaskRepository extends CrudRepository<TaskEntity, UUID> {
     @Query("SELECT * FROM tasks WHERE goal_id = :goalId AND status = :status ORDER BY created_at ASC")
     List<TaskEntity> findByGoalIdAndStatus(UUID goalId, String status);
     
+    @Modifying
     @Query("DELETE FROM tasks WHERE goal_id = :goalId")
     void deleteByGoalId(UUID goalId);
 }

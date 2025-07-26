@@ -279,6 +279,25 @@ class WorkflowPersistenceServiceTest {
     }
 
     @Test
+    void deleteGoalAndTasks_ShouldRemoveGoalAndAllRelatedData() {
+        // Given - save goal and tasks
+        Goal savedGoal = persistenceService.saveGoal(testGoal);
+        persistenceService.saveTask(testTask1, savedGoal.id());
+        persistenceService.saveTask(testTask2, savedGoal.id());
+        
+        // Verify data exists
+        assertThat(persistenceService.findGoalById(savedGoal.id())).isNotNull();
+        assertThat(persistenceService.findTasksByGoalId(savedGoal.id())).hasSize(2);
+        
+        // When
+        persistenceService.deleteGoalAndTasks(savedGoal.id());
+        
+        // Then
+        assertThat(persistenceService.findGoalById(savedGoal.id())).isNull();
+        assertThat(persistenceService.findTasksByGoalId(savedGoal.id())).isEmpty();
+    }
+
+    @Test
     void saveTask_ShouldHandleTasksWithDependencies() {
         // Given - save goal and tasks with dependencies
         Goal savedGoal = persistenceService.saveGoal(testGoal);

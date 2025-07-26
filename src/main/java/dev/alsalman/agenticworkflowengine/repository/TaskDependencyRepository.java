@@ -1,6 +1,7 @@
 package dev.alsalman.agenticworkflowengine.repository;
 
 import dev.alsalman.agenticworkflowengine.domain.TaskDependency;
+import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -17,6 +18,7 @@ public interface TaskDependencyRepository extends CrudRepository<TaskDependency,
     @Query("SELECT * FROM task_dependencies WHERE depends_on_task_id = :dependsOnTaskId")
     List<TaskDependency> findByDependsOnTaskId(UUID dependsOnTaskId);
     
+    @Modifying
     @Query("DELETE FROM task_dependencies WHERE task_id IN (SELECT id FROM tasks WHERE goal_id = :goalId)")
     void deleteByGoalId(UUID goalId);
 }
