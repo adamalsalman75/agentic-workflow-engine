@@ -37,27 +37,6 @@ public class WorkflowOrchestrator {
         this.persistenceService = persistenceService;
     }
     
-    public WorkflowResult executeWorkflow(String userQuery) {
-        Instant startTime = Instant.now();
-        log.info("Starting async workflow execution for query: '{}'", userQuery);
-        
-        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
-            
-            // Create initial goal and save to database
-            Goal goal = Goal.create(userQuery);
-            goal = persistenceService.saveGoal(goal);
-            log.debug("Created and saved goal with ID: {}", goal.id());
-            
-            return executeWorkflowWithGoal(userQuery, goal, startTime);
-        } catch (Exception e) {
-            log.error("Async workflow execution failed for query: '{}'", userQuery, e);
-            Goal failedGoal = Goal.create(userQuery).withStatus(dev.alsalman.agenticworkflowengine.domain.GoalStatus.FAILED);
-            
-            // Save failed goal to database
-            persistenceService.saveGoal(failedGoal);
-            return WorkflowResult.failure(failedGoal, startTime);
-        }
-    }
     
     public WorkflowResult executeWorkflow(String userQuery, UUID goalId) {
         Instant startTime = Instant.now();
@@ -260,7 +239,7 @@ public class WorkflowOrchestrator {
     private List<Task> executeTasksInParallel(List<Task> executableTasks, String userQuery, List<Task> allTasks) {
         if (executableTasks.size() == 1) {
             // Single task - no need for parallel execution
-            Task task = executableTasks.get(0);
+            Task task = executableTasks.getFirst();
             log.info("Executing single task: '{}'", task.description());
             
             List<Task> completedTasks = allTasks.stream()
@@ -289,8 +268,8 @@ public class WorkflowOrchestrator {
                 
             parallelScope.join();
             parallelScope.throwIfFailed();
-            
-            List<Task> results = subtasks.stream()
+
+            return subtasks.stream()
                 .map(subtask -> {
                     try {
                         Task result = subtask.get();
@@ -302,8 +281,6 @@ public class WorkflowOrchestrator {
                     }
                 })
                 .toList();
-                
-            return results;
             
         } catch (Exception e) {
             log.error("Parallel task execution failed", e);

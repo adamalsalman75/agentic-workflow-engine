@@ -4,7 +4,6 @@ import dev.alsalman.agenticworkflowengine.domain.Goal;
 import dev.alsalman.agenticworkflowengine.domain.GoalEntity;
 import dev.alsalman.agenticworkflowengine.domain.Task;
 import dev.alsalman.agenticworkflowengine.domain.TaskEntity;
-import dev.alsalman.agenticworkflowengine.domain.TaskDependency;
 import dev.alsalman.agenticworkflowengine.repository.GoalRepository;
 import dev.alsalman.agenticworkflowengine.repository.TaskRepository;
 import dev.alsalman.agenticworkflowengine.repository.TaskDependencyRepository;
@@ -23,15 +22,13 @@ public class WorkflowPersistenceService {
     
     private final GoalRepository goalRepository;
     private final TaskRepository taskRepository;
-    private final TaskDependencyRepository taskDependencyRepository;
-    
+
     public WorkflowPersistenceService(
             GoalRepository goalRepository, 
             TaskRepository taskRepository,
             TaskDependencyRepository taskDependencyRepository) {
         this.goalRepository = goalRepository;
         this.taskRepository = taskRepository;
-        this.taskDependencyRepository = taskDependencyRepository;
     }
     
     @Transactional
@@ -97,11 +94,6 @@ public class WorkflowPersistenceService {
     }
     
     
-    @Transactional
-    public void saveTaskDependencies(List<TaskDependency> dependencies) {
-        log.debug("Saving {} task dependencies", dependencies.size());
-        taskDependencyRepository.saveAll(dependencies);
-    }
     
     @Transactional(readOnly = true)
     public Goal findGoalById(UUID goalId) {
@@ -131,30 +123,5 @@ public class WorkflowPersistenceService {
             .toList();
     }
     
-    @Transactional(readOnly = true)
-    public List<Goal> findRecentGoals(int limit) {
-        return goalRepository.findRecentGoals(limit)
-            .stream()
-            .map(entity -> {
-                List<Task> tasks = findTasksByGoalId(entity.id());
-                return new Goal(
-                    entity.id(),
-                    entity.query(),
-                    tasks,
-                    entity.summary(),
-                    entity.status(),
-                    entity.createdAt(),
-                    entity.completedAt()
-                );
-            })
-            .toList();
-    }
     
-    @Transactional
-    public void deleteGoalAndTasks(UUID goalId) {
-        log.debug("Deleting goal and all related tasks for goal ID: {}", goalId);
-        taskDependencyRepository.deleteByGoalId(goalId);
-        taskRepository.deleteByGoalId(goalId);
-        goalRepository.deleteById(goalId);
-    }
 }

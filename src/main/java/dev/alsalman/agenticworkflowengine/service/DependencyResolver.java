@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class DependencyResolver {
@@ -25,29 +26,7 @@ public class DependencyResolver {
             .toList();
     }
     
-    /**
-     * Get tasks that can run in parallel (no interdependencies)
-     */
-    public List<List<Task>> getParallelBatches(List<Task> allTasks) {
-        Set<UUID> completedTaskIds = getCompletedTaskIds(allTasks);
-        List<Task> executableTasks = getExecutableTasks(allTasks);
-        
-        // For now, return each executable task as its own batch
-        // TODO: Analyze interdependencies within executable tasks for true parallelism
-        return executableTasks.stream()
-            .map(List::of)
-            .toList();
-    }
     
-    /**
-     * Get tasks with informational dependencies that can benefit from completed task results
-     */
-    public List<Task> getTasksWithInformationalDependencies(List<Task> allTasks, UUID completedTaskId) {
-        return allTasks.stream()
-            .filter(task -> task.status() == TaskStatus.PENDING)
-            .filter(task -> task.informationalDependencies().contains(completedTaskId))
-            .toList();
-    }
     
     /**
      * Check if all tasks can be completed (no circular dependencies)
@@ -62,23 +41,6 @@ public class DependencyResolver {
         return false;
     }
     
-    /**
-     * Get dependency chain for a task (all tasks it depends on, recursively)
-     */
-    public List<UUID> getDependencyChain(Task task, List<Task> allTasks) {
-        return task.blockingDependencies().stream()
-            .flatMap(depId -> {
-                Task depTask = findTaskById(allTasks, depId);
-                if (depTask != null) {
-                    List<UUID> chain = getDependencyChain(depTask, allTasks);
-                    chain.add(depId);
-                    return chain.stream();
-                }
-                return List.of(depId).stream();
-            })
-            .distinct()
-            .toList();
-    }
     
     /**
      * Validate task dependencies are all valid (reference existing tasks)
@@ -97,7 +59,7 @@ public class DependencyResolver {
                     .map(depId -> "Task '" + task.description() + "' has invalid informational dependency: " + depId)
                     .toList();
                     
-                return List.of(errors, infoErrors).stream().flatMap(List::stream);
+                return Stream.of(errors, infoErrors).flatMap(List::stream);
             })
             .toList();
     }

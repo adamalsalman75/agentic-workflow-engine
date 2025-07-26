@@ -2,6 +2,7 @@ package dev.alsalman.agenticworkflowengine.domain;
 
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -67,15 +68,8 @@ public record Task(
         );
     }
     
-    public boolean hasBlockingDependencies() {
-        return !blockingDependencies.isEmpty();
-    }
-    
-    public boolean hasInformationalDependencies() {
-        return !informationalDependencies.isEmpty();
-    }
     
     public boolean canExecute(List<UUID> completedTaskIds) {
-        return blockingDependencies.stream().allMatch(completedTaskIds::contains);
+        return new HashSet<>(completedTaskIds).containsAll(blockingDependencies);
     }
 }

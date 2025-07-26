@@ -44,7 +44,6 @@ class WorkflowPersistenceServiceTest {
 
     private Goal testGoal;
     private Task testTask1, testTask2, testTask3;
-    private UUID goalId;
 
     @BeforeEach
     void setUp() {
@@ -52,11 +51,11 @@ class WorkflowPersistenceServiceTest {
         taskDependencyRepository.deleteAll();
         taskRepository.deleteAll();
         goalRepository.deleteAll();
-        
-        goalId = UUID.randomUUID();
+
+        UUID goalId = UUID.randomUUID();
         
         testGoal = new Goal(
-            goalId,
+                goalId,
             "Test workflow goal",
             List.of(),
             null,
@@ -256,46 +255,7 @@ class WorkflowPersistenceServiceTest {
         assertThat(tasks).isEmpty();
     }
 
-    @Test
-    void findRecentGoals_ShouldReturnGoalsOrderedByCreationTime() {
-        // Given - save multiple goals with different creation times
-        Goal goal1 = new Goal(testGoal.id(), "First goal", List.of(), null, GoalStatus.IN_PROGRESS, Instant.now(), null);
-        Goal goal2 = new Goal(UUID.randomUUID(), "Second goal", List.of(), null, GoalStatus.IN_PROGRESS, Instant.now(), null);
-        Goal goal3 = new Goal(UUID.randomUUID(), "Third goal", List.of(), null, GoalStatus.IN_PROGRESS, Instant.now(), null);
-        
-        persistenceService.saveGoal(goal1);
-        persistenceService.saveGoal(goal2);
-        persistenceService.saveGoal(goal3);
-        
-        // When
-        List<Goal> recentGoals = persistenceService.findRecentGoals(2);
-        
-        // Then
-        assertThat(recentGoals).hasSize(2);
-        // Most recent goals should be returned (exact order depends on database implementation)
-        assertThat(recentGoals)
-            .extracting(Goal::query)
-            .contains("Second goal", "Third goal");
-    }
 
-    @Test
-    void deleteGoalAndTasks_ShouldRemoveGoalAndAllRelatedData() {
-        // Given - save goal and tasks
-        Goal savedGoal = persistenceService.saveGoal(testGoal);
-        persistenceService.saveTask(testTask1, savedGoal.id());
-        persistenceService.saveTask(testTask2, savedGoal.id());
-        
-        // Verify data exists
-        assertThat(persistenceService.findGoalById(savedGoal.id())).isNotNull();
-        assertThat(persistenceService.findTasksByGoalId(savedGoal.id())).hasSize(2);
-        
-        // When
-        persistenceService.deleteGoalAndTasks(savedGoal.id());
-        
-        // Then
-        assertThat(persistenceService.findGoalById(savedGoal.id())).isNull();
-        assertThat(persistenceService.findTasksByGoalId(savedGoal.id())).isEmpty();
-    }
 
     @Test
     void saveTask_ShouldHandleTasksWithDependencies() {
