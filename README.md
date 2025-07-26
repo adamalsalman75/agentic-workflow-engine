@@ -14,14 +14,22 @@ The system uses four main AI agents with dependency-aware parallel execution:
 
 ## Features
 
+### 🚀 **Async Workflow Engine**
+- ✅ **Instant API responses** - Get goal ID immediately, workflow runs in background
+- ✅ **Real-time progress tracking** - Monitor task execution as it happens
+- ✅ **Virtual thread execution** - Efficient async processing with Java 24 virtual threads
+- ✅ **REST API endpoints** - Start workflows and track progress via simple HTTP calls
+
+### 🧠 **Intelligent Task Management**
 - ✅ **Dependency-aware parallel execution** - Tasks run in parallel when dependencies allow
-- ✅ **Smart task planning** with blocking and informational dependencies
+- ✅ **Smart task planning** with blocking and informational dependencies  
 - ✅ **Dynamic task planning** that adapts based on task results
 - ✅ **Context-aware task execution** with completed task results
 - ✅ **Circular dependency detection** prevents infinite loops
-- ✅ **Virtual threads with StructuredTaskScope** for efficient async operations
+
+### 🏗️ **Technical Excellence**
+- ✅ **PostgreSQL persistence** - Tasks persist immediately for real-time tracking
 - ✅ **Immutable domain records** following Java best practices
-- ✅ **PostgreSQL integration** with dependency tracking
 - ✅ **Comprehensive logging** for debugging parallel execution
 - ✅ **OpenAI GPT-4 integration** for intelligent task planning
 - ✅ **Rate limiting resilience** with exponential backoff retry logic
@@ -72,7 +80,9 @@ The application will start on `http://localhost:8080`
 
 ## API Usage
 
-### Execute Workflow
+The workflow engine provides an async API with instant response and real-time progress tracking.
+
+### 1. Start Workflow Execution
 
 **Endpoint:** `POST /api/workflow/execute`
 
@@ -83,35 +93,144 @@ The application will start on `http://localhost:8080`
 }
 ```
 
-**Response:**
+**Response (Instant):**
 ```json
 {
-  "goal": {
-    "id": "uuid",
-    "query": "Your original query",
-    "tasks": [
-      {
-        "id": "uuid",
-        "description": "Task description",
-        "result": "Task execution result",
-        "status": "COMPLETED",
-        "createdAt": "2024-01-01T10:00:00Z",
-        "completedAt": "2024-01-01T10:05:00Z"
-      }
-    ],
-    "summary": "AI-generated summary of the workflow execution",
-    "status": "COMPLETED",
-    "createdAt": "2024-01-01T10:00:00Z",
-    "completedAt": "2024-01-01T10:10:00Z"
-  },
-  "startTime": "2024-01-01T10:00:00Z",
-  "endTime": "2024-01-01T10:10:00Z",
-  "duration": "PT10M",
-  "success": true
+  "goalId": "550e8400-e29b-41d4-a716-446655440000",
+  "message": "Workflow execution started"
 }
 ```
 
-## Example cURL Commands
+The workflow executes asynchronously in virtual threads. Use the returned `goalId` to track progress.
+
+### 2. Check Goal Status
+
+**Endpoint:** `GET /api/workflow/goal/{goalId}`
+
+**Response:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "query": "Your original query",
+  "tasks": [
+    {
+      "id": "task-uuid-1",
+      "description": "Task description",
+      "result": "Task execution result",
+      "status": "COMPLETED",
+      "blockingDependencies": [],
+      "informationalDependencies": [],
+      "createdAt": "2024-01-01T10:00:00Z",
+      "completedAt": "2024-01-01T10:05:00Z"
+    }
+  ],
+  "summary": "AI-generated summary of the workflow execution",
+  "status": "COMPLETED",
+  "createdAt": "2024-01-01T10:00:00Z",
+  "completedAt": "2024-01-01T10:10:00Z"
+}
+```
+
+### 3. Check Task Progress
+
+**Endpoint:** `GET /api/workflow/goal/{goalId}/tasks`
+
+**Response:**
+```json
+[
+  {
+    "id": "task-uuid-1",
+    "description": "Research coffee shop market",
+    "result": "Market research completed...",
+    "status": "COMPLETED",
+    "blockingDependencies": [],
+    "informationalDependencies": [],
+    "createdAt": "2024-01-01T10:00:00Z",
+    "completedAt": "2024-01-01T10:02:00Z"
+  },
+  {
+    "id": "task-uuid-2", 
+    "description": "Develop business plan",
+    "result": null,
+    "status": "PENDING",
+    "blockingDependencies": ["task-uuid-1"],
+    "informationalDependencies": [],
+    "createdAt": "2024-01-01T10:00:00Z",
+    "completedAt": null
+  }
+]
+```
+
+### Task Status Values
+- `PENDING` - Task created but not yet started
+- `IN_PROGRESS` - Task currently executing (internal use)
+- `COMPLETED` - Task finished successfully
+
+## Complete Workflow Example
+
+Here's a complete example showing the async workflow process:
+
+### Step 1: Start a Workflow
+```bash
+# Start the workflow
+curl -X POST http://localhost:8080/api/workflow/execute \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Help me start a coffee shop business including market research, business plan, permits, and initial setup"
+  }'
+
+# Response (immediate):
+# {
+#   "goalId": "550e8400-e29b-41d4-a716-446655440000", 
+#   "message": "Workflow execution started"
+# }
+```
+
+### Step 2: Track Task Progress
+```bash
+# Check task progress in real-time
+GOAL_ID="550e8400-e29b-41d4-a716-446655440000"
+
+curl http://localhost:8080/api/workflow/goal/$GOAL_ID/tasks
+
+# Response shows current task status:
+# [
+#   {
+#     "id": "task-1",
+#     "description": "Conduct Market Research",
+#     "status": "COMPLETED",  
+#     "result": "Market research shows strong demand...",
+#     "createdAt": "2024-01-01T10:00:00Z",
+#     "completedAt": "2024-01-01T10:02:30Z"
+#   },
+#   {
+#     "id": "task-2", 
+#     "description": "Develop Business Plan",
+#     "status": "PENDING",
+#     "blockingDependencies": ["task-1"],
+#     "createdAt": "2024-01-01T10:00:00Z"
+#   }
+# ]
+```
+
+### Step 3: Check Final Results
+```bash
+# Check complete goal status and summary
+curl http://localhost:8080/api/workflow/goal/$GOAL_ID
+
+# Response when workflow completes:
+# {
+#   "id": "550e8400-e29b-41d4-a716-446655440000",
+#   "query": "Help me start a coffee shop business...",
+#   "status": "COMPLETED",
+#   "summary": "Successfully created comprehensive coffee shop business plan...",
+#   "tasks": [...], // All completed tasks
+#   "createdAt": "2024-01-01T10:00:00Z",
+#   "completedAt": "2024-01-01T10:15:45Z"
+# }
+```
+
+## Additional Examples
 
 ### 1. Plan a Vacation
 

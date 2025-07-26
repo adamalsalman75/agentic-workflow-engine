@@ -48,6 +48,51 @@ public class WorkflowOrchestrator {
             goal = persistenceService.saveGoal(goal);
             log.debug("Created and saved goal with ID: {}", goal.id());
             
+            return executeWorkflowWithGoal(userQuery, goal, startTime);
+        } catch (Exception e) {
+            log.error("Async workflow execution failed for query: '{}'", userQuery, e);
+            Goal failedGoal = Goal.create(userQuery).withStatus(dev.alsalman.agenticworkflowengine.domain.GoalStatus.FAILED);
+            
+            // Save failed goal to database
+            persistenceService.saveGoal(failedGoal);
+            return WorkflowResult.failure(failedGoal, startTime);
+        }
+    }
+    
+    public WorkflowResult executeWorkflow(String userQuery, UUID goalId) {
+        Instant startTime = Instant.now();
+        log.info("Starting async workflow execution for query: '{}' with goal ID: {}", userQuery, goalId);
+        
+        try {
+            // Load existing goal from database
+            Goal goal = persistenceService.findGoalById(goalId);
+            if (goal == null) {
+                throw new IllegalArgumentException("Goal not found with ID: " + goalId);
+            }
+            
+            return executeWorkflowWithGoal(userQuery, goal, startTime);
+        } catch (Exception e) {
+            log.error("Async workflow execution failed for query: '{}' with goal ID: {}", userQuery, goalId, e);
+            // Try to update goal status to failed
+            try {
+                Goal goal = persistenceService.findGoalById(goalId);
+                if (goal != null) {
+                    goal = goal.withStatus(dev.alsalman.agenticworkflowengine.domain.GoalStatus.FAILED);
+                    persistenceService.saveGoal(goal);
+                    return WorkflowResult.failure(goal, startTime);
+                }
+            } catch (Exception ex) {
+                log.error("Failed to update goal status to failed", ex);
+            }
+            
+            Goal failedGoal = Goal.create(userQuery).withStatus(dev.alsalman.agenticworkflowengine.domain.GoalStatus.FAILED);
+            return WorkflowResult.failure(failedGoal, startTime);
+        }
+    }
+    
+    private WorkflowResult executeWorkflowWithGoal(String userQuery, Goal goal, Instant startTime) {
+        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+            
             // Create initial task plan
             log.info("Creating initial task plan asynchronously...");
             var planningTask = scope.fork(() -> taskPlanAgent.createTaskPlan(userQuery));
@@ -129,7 +174,7 @@ public class WorkflowOrchestrator {
             
         } catch (Exception e) {
             log.error("Async workflow execution failed for query: '{}'", userQuery, e);
-            Goal failedGoal = Goal.create(userQuery).withStatus(dev.alsalman.agenticworkflowengine.domain.GoalStatus.FAILED);
+            Goal failedGoal = goal.withStatus(dev.alsalman.agenticworkflowengine.domain.GoalStatus.FAILED);
             
             // Save failed goal to database
             persistenceService.saveGoal(failedGoal);
