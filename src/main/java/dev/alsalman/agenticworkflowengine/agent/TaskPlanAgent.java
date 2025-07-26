@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.HashMap;
 
 @Component
 public class TaskPlanAgent {
@@ -86,11 +86,12 @@ public class TaskPlanAgent {
         log.info("Parsed {} tasks", tasks.size());
             
         // Create task index map for dependency resolution
-        Map<Integer, UUID> taskIndexMap = tasks.stream()
-            .collect(Collectors.toMap(
-                task -> tasks.indexOf(task) + 1, // 1-based indexing
-                Task::id
-            ));
+        Map<Integer, UUID> taskIndexMap = new HashMap<>();
+        for (int i = 0; i < tasks.size(); i++) {
+            UUID taskId = tasks.get(i).id();
+            taskIndexMap.put(i + 1, taskId); // 1-based indexing
+            log.debug("Task index mapping: Task {} -> UUID {}", i + 1, taskId);
+        }
             
         // Parse dependencies
         List<TaskDependency> dependencies = new ArrayList<>();
@@ -238,7 +239,17 @@ public class TaskPlanAgent {
             .map(TaskDependency::dependsOnTaskId)
             .toList();
             
-        return Task.create(task.description(), blockingDeps, informationalDeps);
+        // CRITICAL: Preserve the original task UUID, don't create a new one
+        return new Task(
+            task.id(), // Preserve original UUID
+            task.description(),
+            task.result(),
+            task.status(),
+            blockingDeps,
+            informationalDeps,
+            task.createdAt(),
+            task.completedAt()
+        );
     }
     
     public List<Task> reviewAndUpdatePlan(List<Task> currentTasks, Task completedTask) {
