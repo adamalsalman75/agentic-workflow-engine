@@ -60,6 +60,17 @@ public class WorkflowOrchestrator {
             log.info("Created {} initial tasks", initialTasks.size());
             initialTasks.forEach(task -> log.debug("Task: {}", task.description()));
             
+            // Persist tasks immediately after planning with PENDING status and update with database IDs
+            log.debug("Persisting {} tasks with PENDING status after planning", initialTasks.size());
+            List<Task> persistedTasks = new ArrayList<>();
+            for (Task task : initialTasks) {
+                Task savedTask = persistenceService.saveTask(task, goal.id());
+                persistedTasks.add(savedTask);
+            }
+            
+            // Update goal with tasks that have database IDs
+            goal = goal.withTasks(persistedTasks);
+            
             // Execute tasks using dependency-aware parallel execution
             List<Task> currentTasks = new ArrayList<>(goal.tasks());
             log.info("Starting dependency-aware task execution phase...");
@@ -80,7 +91,16 @@ public class WorkflowOrchestrator {
             if (dependencyResolver.hasCircularDependencies(currentTasks)) {
                 log.warn("Circular dependencies detected, removing all dependencies and executing sequentially");
                 currentTasks = currentTasks.stream()
-                    .map(task -> Task.create(task.description()))
+                    .map(task -> new Task(
+                        task.id(), // Preserve the existing ID
+                        task.description(),
+                        task.result(),
+                        task.status(),
+                        List.of(), // Remove all blocking dependencies
+                        List.of(), // Remove all informational dependencies
+                        task.createdAt(),
+                        task.completedAt()
+                    ))
                     .toList();
             }
             
@@ -169,16 +189,19 @@ public class WorkflowOrchestrator {
                                 Math.abs(addedTasks), 
                                 addedTasks > 0 ? "ADDED" : "REMOVED");
                         
-                        allTasks = new ArrayList<>(updatedTasks);
-                        
-                        // Save new/updated tasks from plan review to database
-                        for (Task task : allTasks) {
-                            if (task.status() == TaskStatus.PENDING) {
+                        // Update allTasks with persisted versions that have database IDs
+                        List<Task> persistedUpdatedTasks = new ArrayList<>();
+                        for (Task task : updatedTasks) {
+                            if (task.status() == TaskStatus.PENDING && task.id() == null) {
                                 log.info("💡 NEW TASK FROM PLAN REVIEW: '{}'", 
                                         limitText(task.description(), 100));
+                                Task savedTask = persistenceService.saveTask(task, goalId);
+                                persistedUpdatedTasks.add(savedTask);
+                            } else {
+                                persistedUpdatedTasks.add(task);
                             }
-                            persistenceService.saveTask(task, goalId);
                         }
+                        allTasks = persistedUpdatedTasks;
                     } else {
                         log.debug("Plan review completed - no changes needed");
                     }
@@ -255,7 +278,16 @@ public class WorkflowOrchestrator {
     private Task cleanInvalidDependencies(Task task) {
         // For now, just remove all dependencies if there are validation issues
         // In a more sophisticated version, we could selectively remove only invalid ones
-        return Task.create(task.description());
+        return new Task(
+            task.id(), // Preserve the existing ID
+            task.description(),
+            task.result(),
+            task.status(),
+            List.of(), // Remove all blocking dependencies
+            List.of(), // Remove all informational dependencies
+            task.createdAt(),
+            task.completedAt()
+        );
     }
     
     private String limitText(String text, int maxLength) {
