@@ -7,6 +7,7 @@ import dev.alsalman.agenticworkflowengine.domain.Goal;
 import dev.alsalman.agenticworkflowengine.domain.GoalStatus;
 import dev.alsalman.agenticworkflowengine.domain.Task;
 import dev.alsalman.agenticworkflowengine.domain.TaskStatus;
+import dev.alsalman.agenticworkflowengine.domain.TaskPlan;
 import dev.alsalman.agenticworkflowengine.domain.WorkflowResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -99,7 +100,8 @@ class WorkflowOrchestratorTest {
 
         // Mocking the flow
         when(persistenceService.findGoalById(testGoalId)).thenReturn(savedGoal);
-        when(taskPlanAgent.createTaskPlan(userQuery)).thenReturn(initialTasks);
+        TaskPlan taskPlan = TaskPlan.of(initialTasks, List.of());
+        when(taskPlanAgent.createTaskPlanWithDependencies(userQuery)).thenReturn(taskPlan);
         when(persistenceService.saveTask(any(Task.class), eq(testGoalId)))
             .thenReturn(testTask1, testTask2); // Return tasks with IDs
         
@@ -123,7 +125,7 @@ class WorkflowOrchestratorTest {
         assertThat(result.goal().status()).isEqualTo(GoalStatus.COMPLETED);
         
         // Verify interactions
-        verify(taskPlanAgent).createTaskPlan(userQuery);
+        verify(taskPlanAgent).createTaskPlanWithDependencies(userQuery);
         verify(persistenceService, atLeast(2)).saveTask(any(Task.class), eq(testGoalId)); // Initial saves + completion saves
         verify(taskAgent).executeTask(eq(testTask1), eq(userQuery), anyList());
         verify(taskAgent).executeTask(eq(testTask2), eq(userQuery), anyList());
@@ -141,7 +143,8 @@ class WorkflowOrchestratorTest {
         Task completedTask = testTask1.withResult("Task result");
 
         when(persistenceService.findGoalById(testGoalId)).thenReturn(existingGoal);
-        when(taskPlanAgent.createTaskPlan(userQuery)).thenReturn(initialTasks);
+        TaskPlan taskPlan = TaskPlan.of(initialTasks, List.of());
+        when(taskPlanAgent.createTaskPlanWithDependencies(userQuery)).thenReturn(taskPlan);
         when(persistenceService.saveTask(any(Task.class), eq(testGoalId))).thenReturn(testTask1);
         
         when(dependencyResolver.validateDependencies(anyList())).thenReturn(List.of());
@@ -159,7 +162,7 @@ class WorkflowOrchestratorTest {
         // Then
         assertThat(result.success()).isTrue();
         verify(persistenceService).findGoalById(testGoalId);
-        verify(taskPlanAgent).createTaskPlan(userQuery);
+        verify(taskPlanAgent).createTaskPlanWithDependencies(userQuery);
     }
 
     @Test
@@ -174,7 +177,8 @@ class WorkflowOrchestratorTest {
         Task completedTask = testTask1.withResult("Task result");
 
         when(persistenceService.findGoalById(testGoalId)).thenReturn(savedGoal);
-        when(taskPlanAgent.createTaskPlan(userQuery)).thenReturn(initialTasks);
+        TaskPlan taskPlan = TaskPlan.of(initialTasks, List.of());
+        when(taskPlanAgent.createTaskPlanWithDependencies(userQuery)).thenReturn(taskPlan);
         when(persistenceService.saveTask(any(Task.class), eq(testGoalId))).thenReturn(testTask1);
         
         when(dependencyResolver.validateDependencies(anyList())).thenReturn(validationErrors);
@@ -205,7 +209,8 @@ class WorkflowOrchestratorTest {
         Task completedTask = testTask1.withResult("Task result");
 
         when(persistenceService.findGoalById(testGoalId)).thenReturn(savedGoal);
-        when(taskPlanAgent.createTaskPlan(userQuery)).thenReturn(initialTasks);
+        TaskPlan taskPlan = TaskPlan.of(initialTasks, List.of());
+        when(taskPlanAgent.createTaskPlanWithDependencies(userQuery)).thenReturn(taskPlan);
         when(persistenceService.saveTask(any(Task.class), eq(testGoalId))).thenReturn(testTask1);
         
         when(dependencyResolver.validateDependencies(anyList())).thenReturn(List.of());
@@ -232,7 +237,7 @@ class WorkflowOrchestratorTest {
         
         // Mock goal loading to succeed, but task planning to fail
         when(persistenceService.findGoalById(testGoalId)).thenReturn(testGoal);
-        when(taskPlanAgent.createTaskPlan(userQuery)).thenThrow(new RuntimeException("Database error"));
+        when(taskPlanAgent.createTaskPlanWithDependencies(userQuery)).thenThrow(new RuntimeException("Database error"));
         when(persistenceService.saveGoal(any(Goal.class))).thenReturn(testGoal);
 
         // When
@@ -267,7 +272,8 @@ class WorkflowOrchestratorTest {
         Goal savedGoal = testGoal.withTasks(initialTasks);
 
         when(persistenceService.findGoalById(testGoalId)).thenReturn(savedGoal);
-        when(taskPlanAgent.createTaskPlan(userQuery)).thenReturn(initialTasks);
+        TaskPlan taskPlan = TaskPlan.of(initialTasks, List.of());
+        when(taskPlanAgent.createTaskPlanWithDependencies(userQuery)).thenReturn(taskPlan);
         when(persistenceService.saveTask(any(Task.class), eq(testGoalId))).thenReturn(testTask1);
         when(persistenceService.saveGoal(any(Goal.class))).thenReturn(savedGoal);
         

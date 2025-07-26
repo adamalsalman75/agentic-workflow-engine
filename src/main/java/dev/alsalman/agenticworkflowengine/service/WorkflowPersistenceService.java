@@ -4,6 +4,8 @@ import dev.alsalman.agenticworkflowengine.domain.Goal;
 import dev.alsalman.agenticworkflowengine.domain.GoalEntity;
 import dev.alsalman.agenticworkflowengine.domain.Task;
 import dev.alsalman.agenticworkflowengine.domain.TaskEntity;
+import dev.alsalman.agenticworkflowengine.domain.TaskDependency;
+import dev.alsalman.agenticworkflowengine.domain.DependencyType;
 import dev.alsalman.agenticworkflowengine.repository.GoalRepository;
 import dev.alsalman.agenticworkflowengine.repository.TaskRepository;
 import dev.alsalman.agenticworkflowengine.repository.TaskDependencyRepository;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.ArrayList;
 
 @Service
 public class WorkflowPersistenceService {
@@ -22,6 +25,7 @@ public class WorkflowPersistenceService {
     
     private final GoalRepository goalRepository;
     private final TaskRepository taskRepository;
+    private final TaskDependencyRepository taskDependencyRepository;
 
     public WorkflowPersistenceService(
             GoalRepository goalRepository, 
@@ -29,6 +33,7 @@ public class WorkflowPersistenceService {
             TaskDependencyRepository taskDependencyRepository) {
         this.goalRepository = goalRepository;
         this.taskRepository = taskRepository;
+        this.taskDependencyRepository = taskDependencyRepository;
     }
     
     @Transactional
@@ -83,7 +88,29 @@ public class WorkflowPersistenceService {
             saved = taskRepository.save(taskEntity);
         }
         
-        return saved.toTask();
+        Task savedTask = saved.toTask();
+        
+        // Save task dependencies if this is a new task with dependencies
+        if (task.id() == null && (!task.blockingDependencies().isEmpty() || !task.informationalDependencies().isEmpty())) {
+            log.debug("Saving {} blocking and {} informational dependencies for task {}", 
+                     task.blockingDependencies().size(), task.informationalDependencies().size(), savedTask.id());
+            
+            // Save blocking dependencies
+            for (UUID dependsOnTaskId : task.blockingDependencies()) {
+                TaskDependency dependency = TaskDependency.blocking(savedTask.id(), dependsOnTaskId, "blocking dependency");
+                taskDependencyRepository.save(dependency);
+                log.debug("Saved blocking dependency: {} -> {}", savedTask.id(), dependsOnTaskId);
+            }
+            
+            // Save informational dependencies  
+            for (UUID dependsOnTaskId : task.informationalDependencies()) {
+                TaskDependency dependency = TaskDependency.informational(savedTask.id(), dependsOnTaskId, "informational dependency");
+                taskDependencyRepository.save(dependency);
+                log.debug("Saved informational dependency: {} -> {}", savedTask.id(), dependsOnTaskId);
+            }
+        }
+        
+        return savedTask;
     }
     
     private String limitText(String text, int maxLength) {
@@ -116,9 +143,40 @@ public class WorkflowPersistenceService {
     
     @Transactional(readOnly = true)
     public List<Task> findTasksByGoalId(UUID goalId) {
-        return taskRepository.findByGoalId(goalId)
-            .stream()
-            .map(TaskEntity::toTask)
+        List<TaskEntity> taskEntities = taskRepository.findByGoalId(goalId);
+        List<TaskDependency> allDependencies = taskDependencyRepository.findByGoalId(goalId);
+        
+        return taskEntities.stream()
+            .map(taskEntity -> {
+                Task task = taskEntity.toTask();
+                
+                // Find dependencies for this task
+                List<UUID> blockingDeps = allDependencies.stream()
+                    .filter(dep -> dep.taskId().equals(task.id()) && dep.type() == DependencyType.BLOCKING)
+                    .map(TaskDependency::dependsOnTaskId)
+                    .toList();
+                    
+                List<UUID> informationalDeps = allDependencies.stream()
+                    .filter(dep -> dep.taskId().equals(task.id()) && dep.type() == DependencyType.INFORMATIONAL)
+                    .map(TaskDependency::dependsOnTaskId)
+                    .toList();
+                
+                // Return task with dependencies if any exist
+                if (!blockingDeps.isEmpty() || !informationalDeps.isEmpty()) {
+                    return new Task(
+                        task.id(),
+                        task.description(),
+                        task.result(),
+                        task.status(),
+                        blockingDeps,
+                        informationalDeps,
+                        task.createdAt(),
+                        task.completedAt()
+                    );
+                }
+                
+                return task;
+            })
             .toList();
     }
     

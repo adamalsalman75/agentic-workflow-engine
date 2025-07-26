@@ -72,14 +72,17 @@ public class WorkflowOrchestrator {
     private WorkflowResult executeWorkflowWithGoal(String userQuery, Goal goal, Instant startTime) {
         try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
             
-            // Create initial task plan
-            log.info("Creating initial task plan asynchronously...");
-            var planningTask = scope.fork(() -> taskPlanAgent.createTaskPlan(userQuery));
+            // Create initial task plan with dependencies
+            log.info("Creating initial task plan with dependencies asynchronously...");
+            var planningTask = scope.fork(() -> taskPlanAgent.createTaskPlanWithDependencies(userQuery));
             
             scope.join();
             scope.throwIfFailed();
             
-            List<Task> initialTasks = planningTask.get();
+            var taskPlan = planningTask.get();
+            List<Task> initialTasks = taskPlan.tasks();
+            log.info("Created task plan with {} tasks and {} dependencies", 
+                     initialTasks.size(), taskPlan.dependencies().size());
             goal = goal.withTasks(initialTasks);
             log.info("Created {} initial tasks", initialTasks.size());
             initialTasks.forEach(task -> log.debug("Task: {}", task.description()));

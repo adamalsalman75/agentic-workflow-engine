@@ -17,10 +17,10 @@ public record TaskDependency(
     Instant createdAt
 ) {
     public static TaskDependency blocking(UUID taskId, UUID dependsOnTaskId, String reason) {
-        return new TaskDependency(UUID.randomUUID(), taskId, dependsOnTaskId, DependencyType.BLOCKING, reason, Instant.now());
+        return new TaskDependency(null, taskId, dependsOnTaskId, DependencyType.BLOCKING, reason, Instant.now());
     }
     
     public static TaskDependency informational(UUID taskId, UUID dependsOnTaskId, String reason) {
-        return new TaskDependency(UUID.randomUUID(), taskId, dependsOnTaskId, DependencyType.INFORMATIONAL, reason, Instant.now());
+        return new TaskDependency(null, taskId, dependsOnTaskId, DependencyType.INFORMATIONAL, reason, Instant.now());
     }
 }
