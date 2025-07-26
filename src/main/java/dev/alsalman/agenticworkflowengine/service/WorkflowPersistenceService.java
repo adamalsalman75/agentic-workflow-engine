@@ -68,24 +68,32 @@ public class WorkflowPersistenceService {
     
     @Transactional
     public Task saveTask(Task task, UUID goalId) {
-        log.debug("Saving task: {} with status: {}", task.description(), task.status());
+        log.debug("Persisting task: '{}' [{}] with status: {}", 
+                 limitText(task.description(), 60), task.id(), task.status());
         
         TaskEntity taskEntity;
         TaskEntity saved;
         
         if (task.id() != null && taskRepository.existsById(task.id())) {
             // Update existing task
-            log.debug("Updating existing task: {}", task.id());
+            log.debug("Updating existing task in database: {}", task.id());
             taskEntity = TaskEntity.fromTaskWithId(task, goalId);
             saved = taskRepository.save(taskEntity);
         } else {
             // Insert new task
-            log.debug("Inserting new task");
+            log.debug("Inserting completed task into database: {}", task.id());
             taskEntity = TaskEntity.fromTask(task, goalId);
             saved = taskRepository.save(taskEntity);
         }
         
         return saved.toTask();
+    }
+    
+    private String limitText(String text, int maxLength) {
+        if (text == null || text.length() <= maxLength) {
+            return text;
+        }
+        return text.substring(0, maxLength) + "...";
     }
     
     

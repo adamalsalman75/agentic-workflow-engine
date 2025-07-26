@@ -57,12 +57,7 @@ public class WorkflowOrchestrator {
             
             List<Task> initialTasks = planningTask.get();
             goal = goal.withTasks(initialTasks);
-            
-            // Save tasks to database
-            for (Task task : initialTasks) {
-                persistenceService.saveTask(task, goal.id());
-            }
-            log.info("Created and saved {} initial tasks", initialTasks.size());
+            log.info("Created {} initial tasks", initialTasks.size());
             initialTasks.forEach(task -> log.debug("Task: {}", task.description()));
             
             // Execute tasks using dependency-aware parallel execution
@@ -93,11 +88,6 @@ public class WorkflowOrchestrator {
             
             // Update goal and generate summary
             goal = goal.withTasks(currentTasks);
-            
-            // Save updated tasks to database
-            for (Task task : currentTasks) {
-                persistenceService.saveTask(task, goal.id());
-            }
             log.info("Async task execution completed. Generating final summary...");
             
             try (var summaryScope = new StructuredTaskScope.ShutdownOnFailure()) {
@@ -164,15 +154,33 @@ public class WorkflowOrchestrator {
                 
                 // Review and potentially update plan after each completed task
                 if (completedTask.status() == TaskStatus.COMPLETED) {
+                    log.debug("Starting plan review after completing task: '{}'", 
+                             limitText(completedTask.description(), 80));
+                    
                     List<Task> updatedTasks = reviewPlanAfterTask(allTasks, completedTask);
+                    
                     if (!updatedTasks.equals(allTasks)) {
-                        log.info("Task plan updated after completing: '{}'", completedTask.description());
+                        int originalCount = allTasks.size();
+                        int newCount = updatedTasks.size();
+                        int addedTasks = newCount - originalCount;
+                        
+                        log.info("📋 PLAN REVIEW UPDATED TASKS: {} original → {} new ({} tasks {})", 
+                                originalCount, newCount, 
+                                Math.abs(addedTasks), 
+                                addedTasks > 0 ? "ADDED" : "REMOVED");
+                        
                         allTasks = new ArrayList<>(updatedTasks);
                         
-                        // Save updated task plan to database
+                        // Save new/updated tasks from plan review to database
                         for (Task task : allTasks) {
+                            if (task.status() == TaskStatus.PENDING) {
+                                log.info("💡 NEW TASK FROM PLAN REVIEW: '{}'", 
+                                        limitText(task.description(), 100));
+                            }
                             persistenceService.saveTask(task, goalId);
                         }
+                    } else {
+                        log.debug("Plan review completed - no changes needed");
                     }
                 }
             }
@@ -248,5 +256,12 @@ public class WorkflowOrchestrator {
         // For now, just remove all dependencies if there are validation issues
         // In a more sophisticated version, we could selectively remove only invalid ones
         return Task.create(task.description());
+    }
+    
+    private String limitText(String text, int maxLength) {
+        if (text == null || text.length() <= maxLength) {
+            return text;
+        }
+        return text.substring(0, maxLength) + "...";
     }
 }
