@@ -30,34 +30,30 @@ public class TaskPlanAgent {
     
     public TaskPlan createTaskPlanWithDependencies(String userGoal) {
         String prompt = """
-            Break down this goal into 3-6 specific, actionable tasks with clear dependencies.
-            
+            Break down the following goal into 3-6 specific, actionable tasks. For each task, identify any other tasks that it depends on.
+
             Goal: %s
-            
-            CRITICAL: Tasks should have logical dependencies where one task's output is needed by another.
-            
+
+            Key principles:
+            - Efficiency: If tasks are independent and can be done in parallel, do not create a dependency.
+            - Logical Flow: Only create a dependency if one task's output is strictly required to start another.
+            - No Forced Dependencies: If a goal can be broken into completely independent tasks, it is acceptable to have no dependencies.
+
             Examples of dependencies:
             - "Research market" must complete before "Create business plan" (blocking)
             - "Design logo" must complete before "Create marketing materials" (blocking)
             - "Set up legal structure" can inform "Open business bank account" but doesn't block it (informational)
-            
+
             Format EXACTLY as shown:
             TASKS:
             1. [First task description]
             2. [Second task description]
-            3. [Third task description]
-            4. [Fourth task description]
-            
+            ...
+
             DEPENDENCIES:
             Task 2 depends on Task 1 (blocking) - needs market research data to create plan
             Task 3 depends on Task 1 (informational) - market insights help with branding
-            Task 4 depends on Task 2 (blocking) - business plan needed for permits
-            
-            Types: 
-            - blocking (must complete first task before starting second)
-            - informational (first task output helps but doesn't block second task)
-            
-            Think carefully about what each task produces and what other tasks need as input.
+            ...
             """.formatted(userGoal);
             
         String response = resilientChatClient.call("task planning", prompt);
@@ -264,17 +260,21 @@ public class TaskPlanAgent {
             .reduce("", (acc, task) -> acc + task + "\n");
             
         String prompt = """
-            Task completed: %s
+            A task has been completed. Review the results and determine if the remaining plan needs to be updated.
+
+            Completed Task: %s
             Result: %s
-            Completed: %s tasks
-            
-            Remaining tasks:
+            Number of Tasks Completed: %s
+
+            Remaining Tasks:
             %s
-            
-            IMPORTANT: Only modify tasks if the completed task reveals new information that fundamentally changes what needs to be done.
-            Most of the time, the original plan should remain unchanged.
-            
-            Should remaining tasks change? Respond "NO_CHANGES" or list updated tasks (one per line).
+
+            Guiding Principles:
+            - Maintain Stability: The original plan should be followed unless new information makes a change necessary. Do not add, remove, or alter tasks unless the completed task's result makes the existing plan inefficient or obsolete.
+            - High-Impact Changes Only: Only modify the plan if the completed task reveals a critical new piece of information. For example, if a research task reveals that a key assumption in the plan is wrong.
+
+            Based on this, should the remaining tasks be changed?
+            Respond with "NO_CHANGES" if the plan is still valid. Otherwise, provide a new, complete list of the remaining tasks.
             """.formatted(
                 limitText(completedTask.description(), 100),
                 limitText(completedTask.result(), 200),
