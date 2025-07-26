@@ -23,14 +23,17 @@ public class WorkflowOrchestrator {
     private static final Logger log = LoggerFactory.getLogger(WorkflowOrchestrator.class);
     
     private final TaskPlanAgent taskPlanAgent;
+    private final TaskDependencyResolver taskDependencyResolver;
     private final TaskAgent taskAgent;
     private final GoalAgent goalAgent;
     private final DependencyResolver dependencyResolver;
     private final WorkflowPersistenceService persistenceService;
     
-    public WorkflowOrchestrator(TaskPlanAgent taskPlanAgent, TaskAgent taskAgent, GoalAgent goalAgent, 
+    public WorkflowOrchestrator(TaskPlanAgent taskPlanAgent, TaskDependencyResolver taskDependencyResolver,
+                              TaskAgent taskAgent, GoalAgent goalAgent, 
                               DependencyResolver dependencyResolver, WorkflowPersistenceService persistenceService) {
         this.taskPlanAgent = taskPlanAgent;
+        this.taskDependencyResolver = taskDependencyResolver;
         this.taskAgent = taskAgent;
         this.goalAgent = goalAgent;
         this.dependencyResolver = dependencyResolver;
@@ -80,23 +83,20 @@ public class WorkflowOrchestrator {
             scope.throwIfFailed();
             
             var taskPlan = planningTask.get();
-            List<Task> initialTasks = taskPlan.tasks();
             log.info("Created task plan with {} tasks and {} dependencies", 
-                     initialTasks.size(), taskPlan.dependencies().size());
-            goal = goal.withTasks(initialTasks);
-            log.info("Created {} initial tasks", initialTasks.size());
-            initialTasks.forEach(task -> log.debug("Task: {}", task.description()));
+                     taskPlan.tasks().size(), taskPlan.dependencies().size());
             
-            // Persist tasks immediately after planning with PENDING status and update with database IDs
-            log.debug("Persisting {} tasks with PENDING status after planning", initialTasks.size());
-            List<Task> persistedTasks = new ArrayList<>();
-            for (Task task : initialTasks) {
-                Task savedTask = persistenceService.saveTask(task, goal.id());
-                persistedTasks.add(savedTask);
-            }
+            // Use TaskDependencyAgent to coordinate task persistence and UUID mapping
+            log.info("Coordinating task persistence and dependency mapping...");
+            List<Task> coordinatedTasks = taskDependencyResolver.coordinateTaskPersistence(taskPlan, goal.id());
             
-            // Update goal with tasks that have database IDs
-            goal = goal.withTasks(persistedTasks);
+            // Update goal with tasks that have correctly mapped dependencies
+            goal = goal.withTasks(coordinatedTasks);
+            log.info("Coordination complete: {} tasks ready for dependency-aware execution", coordinatedTasks.size());
+            coordinatedTasks.forEach(task -> log.debug("Task '{}' with {} blocking deps, {} informational deps", 
+                                                       task.description(), 
+                                                       task.blockingDependencies().size(),
+                                                       task.informationalDependencies().size()));
             
             // Execute tasks using dependency-aware parallel execution
             List<Task> currentTasks = new ArrayList<>(goal.tasks());

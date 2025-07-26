@@ -180,5 +180,10 @@ public class WorkflowPersistenceService {
             .toList();
     }
     
+    @Transactional
+    public TaskDependency saveTaskDependency(TaskDependency dependency) {
+        log.debug("Saving task dependency: {} -> {}", dependency.taskId(), dependency.dependsOnTaskId());
+        return taskDependencyRepository.save(dependency);
+    }
     
 }
