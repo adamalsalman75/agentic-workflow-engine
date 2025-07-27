@@ -8,11 +8,13 @@ The system uses a **pure orchestration pattern** with clean service separation a
 
 ```mermaid
 graph TB
-    subgraph "Orchestration Layer"
+    %% Top Layer - Orchestration
+    subgraph "🎯 Orchestration Layer"
         WO[WorkflowOrchestrator]
     end
     
-    subgraph "Service Layer (Business Logic)"
+    %% Middle Layer - Services 
+    subgraph "⚙️ Service Layer (Business Logic)"
         GS[GoalService]
         TPS[TaskPlanService]
         TPeS[TaskPersistenceService]
@@ -22,20 +24,22 @@ graph TB
         WSS[WorkflowSummaryService]
     end
     
-    subgraph "AI Agent Layer"
+    %% Bottom Layer - Split into two sections
+    subgraph "🧠 AI Agent Layer"
         TPA[TaskPlanAgent]
         TA[TaskAgent]
         GA[GoalAgent]
+        LLM["🤖 OpenAI GPT-4"]
     end
     
-    subgraph "Infrastructure Layer"
+    subgraph "🏗️ Infrastructure Layer"
         TDR[TaskDependencyResolver]
         DR[DependencyResolver]
         WPS[WorkflowPersistenceService]
-        DB[(PostgreSQL)]
+        DB[("🗄️ PostgreSQL")]
     end
     
-    %% Orchestration Flow
+    %% Orchestration to Services (Top to Middle)
     WO --> GS
     WO --> TPS
     WO --> TPeS
@@ -44,13 +48,13 @@ graph TB
     WO --> PRS
     WO --> WSS
     
-    %% Service to Agent Dependencies
+    %% Services to AI Agents (Middle to Bottom Left)
     TPS --> TPA
     TES --> TA
     WSS --> GA
     PRS --> TPA
     
-    %% Service to Infrastructure Dependencies
+    %% Services to Infrastructure (Middle to Bottom Right)
     GS --> WPS
     TPeS --> TDR
     TES --> DR
@@ -58,20 +62,27 @@ graph TB
     PRS --> WPS
     WSS --> GS
     
+    %% AI Agents to LLM
+    TPA --> LLM
+    TA --> LLM
+    GA --> LLM
+    
     %% Infrastructure Dependencies
     TDR --> WPS
     WPS --> DB
     
     %% Styling
-    classDef orchestration fill:#e1f5fe
-    classDef service fill:#f3e5f5
-    classDef agent fill:#fff3e0
-    classDef infrastructure fill:#e8f5e8
+    classDef orchestration fill:#e1f5fe,stroke:#01579b,stroke-width:3px
+    classDef service fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef agent fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef infrastructure fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef external fill:#fce4ec,stroke:#880e4f,stroke-width:2px
     
     class WO orchestration
     class GS,TPS,TPeS,TPrS,TES,PRS,WSS service
     class TPA,TA,GA agent
-    class TDR,DR,WPS,DB infrastructure
+    class TDR,DR,WPS infrastructure
+    class DB,LLM external
 ```
 
 ### Architecture Layers
