@@ -47,3 +47,55 @@ CREATE INDEX idx_tasks_informational_dependencies ON tasks USING GIN(information
 CREATE INDEX idx_task_dependencies_task_id ON task_dependencies(task_id);
 CREATE INDEX idx_task_dependencies_depends_on ON task_dependencies(depends_on_task_id);
 CREATE INDEX idx_task_dependencies_type ON task_dependencies(dependency_type);
+
+-- Workflow templates tables
+CREATE TABLE workflow_templates (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    category VARCHAR(100),
+    prompt_template TEXT NOT NULL,
+    metadata JSONB DEFAULT '{}',
+    tags TEXT[] DEFAULT '{}',
+    author VARCHAR(255),
+    version INT DEFAULT 1,
+    is_public BOOLEAN DEFAULT true,
+    usage_count INT DEFAULT 0,
+    rating DECIMAL(3,2),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE template_parameters (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    template_id UUID NOT NULL REFERENCES workflow_templates(id) ON DELETE CASCADE,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    type VARCHAR(50) NOT NULL,
+    required BOOLEAN DEFAULT false,
+    default_value JSONB,
+    allowed_values JSONB,
+    validation JSONB,
+    placeholder TEXT,
+    order_index INT NOT NULL,
+    UNIQUE(template_id, name)
+);
+
+CREATE TABLE template_executions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    template_id UUID NOT NULL REFERENCES workflow_templates(id),
+    goal_id UUID NOT NULL REFERENCES goals(id),
+    parameters JSONB NOT NULL,
+    user_id VARCHAR(255),
+    executed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+-- Template indexes
+CREATE INDEX idx_workflow_templates_category ON workflow_templates(category);
+CREATE INDEX idx_workflow_templates_is_public ON workflow_templates(is_public);
+CREATE INDEX idx_workflow_templates_tags ON workflow_templates USING GIN(tags);
+CREATE INDEX idx_workflow_templates_created_at ON workflow_templates(created_at);
+CREATE INDEX idx_template_parameters_template_id ON template_parameters(template_id);
+CREATE INDEX idx_template_executions_template_id ON template_executions(template_id);
+CREATE INDEX idx_template_executions_goal_id ON template_executions(goal_id);
+CREATE INDEX idx_template_executions_user_id ON template_executions(user_id);
