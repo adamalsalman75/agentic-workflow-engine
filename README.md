@@ -29,7 +29,7 @@ graph TB
         TPA[TaskPlanAgent]
         TA[TaskAgent]
         GA[GoalAgent]
-        LLM["🤖 OpenAI GPT-4"]
+        LLM["🤖 OpenAI GPT-4o"]
     end
     
     subgraph "🏗️ Infrastructure Layer"
@@ -129,7 +129,7 @@ graph TB
 - ✅ **PostgreSQL persistence** - Tasks persist immediately for real-time tracking
 - ✅ **Immutable domain records** following Java best practices
 - ✅ **Comprehensive logging** for debugging parallel execution
-- ✅ **OpenAI GPT-4 integration** for intelligent task planning
+- ✅ **OpenAI GPT-4o integration** for intelligent task planning and dependency analysis
 - ✅ **Rate limiting resilience** with exponential backoff retry logic
 - ✅ **Optimized token usage** to reduce API costs and avoid limits
 
@@ -360,27 +360,50 @@ curl -X POST http://localhost:8080/api/workflow/execute \
 ✅ **Context Awareness**: Dependent tasks use outputs from completed dependencies  
 ✅ **Real-time Tracking**: Monitor progress as tasks complete
 
+### Why GPT-4o for Task Dependencies
+
+The system uses **OpenAI GPT-4o** specifically for its superior capability in understanding complex task relationships:
+
+✅ **Enhanced Reasoning**: GPT-4o significantly outperforms GPT-4 in analyzing logical task dependencies  
+✅ **Parallel vs Sequential**: Better distinguishes between tasks that can run in parallel vs those requiring sequential execution  
+✅ **Dependency Types**: More accurately identifies blocking dependencies vs informational dependencies  
+✅ **Context Understanding**: Superior at understanding when one task's output is truly needed as input for another  
+✅ **Optimization**: Creates more efficient execution plans by minimizing unnecessary sequential bottlenecks
+
+This improvement was critical for the coffee shop example, where GPT-4 would often create unnecessary blocking dependencies, while GPT-4o correctly identifies that permits and location research can happen in parallel with market research.
+
 
 ## Configuration
 
-### Application Properties
+### Application Configuration
 
-Key configuration options in `application.properties`:
+Key configuration options in `application.yaml`:
 
-```properties
-# OpenAI Configuration
-spring.ai.openai.api-key=${OPENAI_API_KEY}
-spring.ai.openai.chat.options.model=gpt-4
-spring.ai.openai.chat.options.temperature=0.7
+```yaml
+spring:
+  # OpenAI Configuration
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o
+          temperature: 0.7
+          max-tokens: 1000
 
-# Database Configuration
-spring.datasource.url=${DATABASE_URL:jdbc:postgresql://localhost:5432/agentic_workflow}
-spring.datasource.username=${DATABASE_USERNAME:postgres}
-spring.datasource.password=${DATABASE_PASSWORD:password}
+  # Database Configuration
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/agentic_workflow}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
 
 # Logging
-logging.level.root=DEBUG
-logging.level.dev.alsalman.agenticworkflowengine=DEBUG
+logging:
+  level:
+    dev.alsalman.agenticworkflowengine: DEBUG
+    org.springframework.web: INFO
+    org.springframework.ai: INFO
 ```
 
 ### Environment Variables
@@ -545,6 +568,7 @@ This application leverages Java 24 preview features:
 - **Pure Orchestration Pattern** - Orchestrator contains zero business logic, only coordinates services
 - **Service-Based Architecture** - Each service encapsulates specific business concerns
 - **AI Agent Encapsulation** - Agents wrapped by services for clean separation
+- **Advanced AI Integration** - GPT-4o for superior task dependency analysis and parallel execution planning
 - **Immutable Records** - All domain models use immutable Java records for thread safety
 - **Virtual Threads** - Async operations use virtual threads over reactive programming
 - **Spring Data JDBC** - Simple, direct database access through shared persistence layer

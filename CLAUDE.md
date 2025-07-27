@@ -100,7 +100,7 @@ src/
 │   │       ├── DependencyResolver.java           # Dependency analysis
 │   │       └── WorkflowPersistenceService.java   # Database persistence operations
 │   └── resources/
-│       ├── application.properties                # Application configuration
+│       ├── application.yaml                     # Application configuration
 │       └── schema.sql                           # Database schema with dependencies
 └── test/
     └── java/dev/alsalman/agenticworkflowengine/
@@ -113,14 +113,14 @@ src/
 - **AI Agent Encapsulation**: Agents are wrapped by services, not directly used by orchestrator
 - **Dependency-Aware Parallel Execution**: Tasks analyzed and executed in optimal parallel batches
 - **Enterprise-Ready Layering**: Clear separation between orchestration, business logic, and infrastructure
-- **Spring AI Integration**: OpenAI GPT-4 for intelligent task planning through service layer
+- **Spring AI Integration**: OpenAI GPT-4o for superior task dependency analysis and planning through service layer
 - **PostgreSQL Persistence**: Shared infrastructure layer for data consistency
 - **Virtual Threads**: StructuredTaskScope for efficient async operations
 - **Comprehensive Testing**: Each service independently testable with full coverage
 - **Immutable Domain Models**: Records-based domain design for thread safety
 
 ## Configuration
-- Application configuration is managed through `application.properties`
+- Application configuration is managed through `application.yaml`
 - Spring AI OpenAI integration requires appropriate API keys and configuration
 - The application name is set to "agentic-workflow-engine"
 
