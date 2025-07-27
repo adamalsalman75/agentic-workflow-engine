@@ -86,38 +86,8 @@ public class WorkflowOrchestrator {
                                                        task.informationalDependencies().size()));
             
             // Execute tasks using dependency-aware parallel execution
-            List<Task> currentTasks = new ArrayList<>(goal.tasks());
             log.info("Starting dependency-aware task execution phase...");
-            
-            // Validate dependencies and clean up invalid ones
-            List<String> validationErrors = dependencyResolver.validateDependencies(currentTasks);
-            if (!validationErrors.isEmpty()) {
-                log.warn("Dependency validation errors found: {}", validationErrors.size());
-                log.warn("Removing invalid dependencies and continuing with independent task execution");
-                
-                // Remove invalid dependencies from all tasks
-                currentTasks = currentTasks.stream()
-                    .map(this::cleanInvalidDependencies)
-                    .toList();
-            }
-            
-            // Check for circular dependencies after cleanup
-            if (dependencyResolver.hasCircularDependencies(currentTasks)) {
-                log.warn("Circular dependencies detected, removing all dependencies and executing sequentially");
-                currentTasks = currentTasks.stream()
-                    .map(task -> new Task(
-                        task.id(), // Preserve the existing ID
-                        task.description(),
-                        task.result(),
-                        task.status(),
-                        List.of(), // Remove all blocking dependencies
-                        List.of(), // Remove all informational dependencies
-                        task.createdAt(),
-                        task.completedAt()
-                    ))
-                    .toList();
-            }
-            
+            List<Task> currentTasks = prepareTasks(goal.tasks());
             currentTasks = executeTasksWithDependencies(currentTasks, userQuery, goal.id());
             
             // Update goal and generate summary
@@ -172,50 +142,8 @@ public class WorkflowOrchestrator {
             
             // Update the task list with completed tasks and save to database
             for (Task completedTask : completedBatch) {
-                // Save completed task to database
-                persistenceService.saveTask(completedTask, goalId);
-                
-                for (int i = 0; i < allTasks.size(); i++) {
-                    if (allTasks.get(i).id().equals(completedTask.id())) {
-                        allTasks.set(i, completedTask);
-                        break;
-                    }
-                }
-                
-                // Review and potentially update plan after each completed task
-                if (completedTask.status() == TaskStatus.COMPLETED) {
-                    log.debug("Starting plan review after completing task: '{}'", 
-                             completedTask.description());
-                    
-                    List<Task> updatedTasks = reviewPlanAfterTask(allTasks, completedTask);
-                    
-                    if (!updatedTasks.equals(allTasks)) {
-                        int originalCount = allTasks.size();
-                        int newCount = updatedTasks.size();
-                        int addedTasks = newCount - originalCount;
-                        
-                        log.info("📋 PLAN REVIEW UPDATED TASKS: {} original → {} new ({} tasks {})", 
-                                originalCount, newCount, 
-                                Math.abs(addedTasks), 
-                                addedTasks > 0 ? "ADDED" : "REMOVED");
-                        
-                        // Update allTasks with persisted versions that have database IDs
-                        List<Task> persistedUpdatedTasks = new ArrayList<>();
-                        for (Task task : updatedTasks) {
-                            if (task.status() == TaskStatus.PENDING && task.id() == null) {
-                                log.info("💡 NEW TASK FROM PLAN REVIEW: '{}'", 
-                                        task.description());
-                                Task savedTask = persistenceService.saveTask(task, goalId);
-                                persistedUpdatedTasks.add(savedTask);
-                            } else {
-                                persistedUpdatedTasks.add(task);
-                            }
-                        }
-                        allTasks = persistedUpdatedTasks;
-                    } else {
-                        log.debug("Plan review completed - no changes needed");
-                    }
-                }
+                allTasks = updateTaskInList(allTasks, completedTask, goalId);
+                allTasks = handlePlanReview(allTasks, completedTask, goalId);
             }
         }
         
@@ -283,9 +211,96 @@ public class WorkflowOrchestrator {
         }
     }
     
+    private List<Task> prepareTasks(List<Task> tasks) {
+        List<Task> currentTasks = new ArrayList<>(tasks);
+        
+        // Validate dependencies and clean up invalid ones
+        List<String> validationErrors = dependencyResolver.validateDependencies(currentTasks);
+        if (!validationErrors.isEmpty()) {
+            log.warn("Dependency validation errors found: {}", validationErrors.size());
+            log.warn("Removing invalid dependencies and continuing with independent task execution");
+            
+            // Remove invalid dependencies from all tasks
+            currentTasks = currentTasks.stream()
+                .map(this::cleanInvalidDependencies)
+                .toList();
+        }
+        
+        // Check for circular dependencies after cleanup
+        if (dependencyResolver.hasCircularDependencies(currentTasks)) {
+            log.warn("Circular dependencies detected, removing all dependencies and executing sequentially");
+            currentTasks = currentTasks.stream()
+                .map(task -> new Task(
+                    task.id(), // Preserve the existing ID
+                    task.description(),
+                    task.result(),
+                    task.status(),
+                    List.of(), // Remove all blocking dependencies
+                    List.of(), // Remove all informational dependencies
+                    task.createdAt(),
+                    task.completedAt()
+                ))
+                .toList();
+        }
+        
+        return currentTasks;
+    }
+    
+    private List<Task> updateTaskInList(List<Task> allTasks, Task completedTask, UUID goalId) {
+        // Save completed task to database
+        persistenceService.saveTask(completedTask, goalId);
+        
+        // Update task in the list
+        for (int i = 0; i < allTasks.size(); i++) {
+            if (allTasks.get(i).id().equals(completedTask.id())) {
+                allTasks.set(i, completedTask);
+                break;
+            }
+        }
+        
+        return allTasks;
+    }
+    
+    private List<Task> handlePlanReview(List<Task> allTasks, Task completedTask, UUID goalId) {
+        // Only review plan for completed tasks
+        if (completedTask.status() != TaskStatus.COMPLETED) {
+            return allTasks;
+        }
+        
+        log.debug("Starting plan review after completing task: '{}'", completedTask.description());
+        
+        List<Task> updatedTasks = reviewPlanAfterTask(allTasks, completedTask);
+        
+        if (!updatedTasks.equals(allTasks)) {
+            int originalCount = allTasks.size();
+            int newCount = updatedTasks.size();
+            int addedTasks = newCount - originalCount;
+            
+            log.info("📋 PLAN REVIEW UPDATED TASKS: {} original → {} new ({} tasks {})", 
+                    originalCount, newCount, 
+                    Math.abs(addedTasks), 
+                    addedTasks > 0 ? "ADDED" : "REMOVED");
+            
+            // Update allTasks with persisted versions that have database IDs
+            List<Task> persistedUpdatedTasks = new ArrayList<>();
+            for (Task task : updatedTasks) {
+                if (task.status() == TaskStatus.PENDING && task.id() == null) {
+                    log.info("💡 NEW TASK FROM PLAN REVIEW: '{}'", task.description());
+                    Task savedTask = persistenceService.saveTask(task, goalId);
+                    persistedUpdatedTasks.add(savedTask);
+                } else {
+                    persistedUpdatedTasks.add(task);
+                }
+            }
+            return persistedUpdatedTasks;
+        } else {
+            log.debug("Plan review completed - no changes needed");
+            return allTasks;
+        }
+    }
+    
     private Task cleanInvalidDependencies(Task task) {
-        // For now, just remove all dependencies if there are validation issues
-        // In a more sophisticated version, we could selectively remove only invalid ones
+        // Remove all dependencies if there are validation issues
         return new Task(
             task.id(), // Preserve the existing ID
             task.description(),
