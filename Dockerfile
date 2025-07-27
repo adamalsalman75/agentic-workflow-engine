@@ -1,37 +1,32 @@
-# Build stage
-FROM eclipse-temurin:24-jdk as builder
-
+# Multi-stage build for agentic workflow engine
+FROM maven:3.9-eclipse-temurin-24-alpine AS build
 WORKDIR /app
-COPY .mvn/ .mvn
-COPY mvnw pom.xml ./
-RUN ./mvnw dependency:go-offline
+COPY . .
+RUN mvn clean install -DskipTests
 
-COPY src ./src
-RUN ./mvnw clean package -DskipTests
-
-# Runtime stage
-FROM eclipse-temurin:24-jre
-
+FROM eclipse-temurin:24-jre-alpine
 WORKDIR /app
 
-# Create non-root user
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+# Install wget for health checks
+RUN apk add --no-cache wget
 
-# Copy the jar file
-COPY --from=builder /app/target/*.jar app.jar
+# Copy the built jar
+COPY --from=build /app/target/agentic-workflow-engine-0.0.1-SNAPSHOT.jar /app/app.jar
 
-# Change ownership
-RUN chown appuser:appuser app.jar
+# Create non-root user for security
+RUN addgroup -g 1001 -S appuser && \
+    adduser -u 1001 -S appuser -G appuser
 
-# Switch to non-root user
+# Change ownership of the app directory
+RUN chown -R appuser:appuser /app
 USER appuser
 
 # Expose port
 EXPOSE 8080
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8080/actuator/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
 # Run the application with preview features enabled
-ENTRYPOINT ["java", "--enable-preview", "-jar", "app.jar"]
+ENTRYPOINT ["java", "--enable-preview", "-jar", "/app/app.jar"]

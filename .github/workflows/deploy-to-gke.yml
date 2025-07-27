@@ -1,0 +1,76 @@
+name: Deploy Agentic Workflow Engine to GKE
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+    - name: Configure Docker
+      run: gcloud auth configure-docker
+
+    - name: Build Docker image
+      run: |
+        docker build -t gcr.io/adam-466814/agentic-workflow-engine:$(git rev-parse --short HEAD) -t gcr.io/adam-466814/agentic-workflow-engine:latest .
+
+    - name: Push Docker image
+      run: |
+        docker push gcr.io/adam-466814/agentic-workflow-engine:$(git rev-parse --short HEAD)
+        docker push gcr.io/adam-466814/agentic-workflow-engine:latest
+
+    - name: Install gke-gcloud-auth-plugin
+      run: gcloud components install gke-gcloud-auth-plugin
+
+    - name: Deploy to GKE
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+      run: |
+        # Create or get GKE cluster
+        gcloud container clusters describe agentic-workflow-cluster --zone us-west1 --project adam-466814 || \
+        gcloud container clusters create-auto agentic-workflow-cluster --region us-west1 --project adam-466814
+
+        # Get cluster credentials
+        gcloud container clusters get-credentials agentic-workflow-cluster --zone us-west1 --project adam-466814
+
+        # Create secrets if they don't exist
+        if ! kubectl get secret agentic-workflow-secrets > /dev/null 2>&1; then
+          echo "Creating secrets..."
+          kubectl create secret generic agentic-workflow-secrets \
+            --from-literal=openai-api-key="$OPENAI_API_KEY" \
+            --from-literal=database-password="$DATABASE_PASSWORD"
+        else
+          echo "Secrets already exist, updating..."
+          kubectl create secret generic agentic-workflow-secrets \
+            --from-literal=openai-api-key="$OPENAI_API_KEY" \
+            --from-literal=database-password="$DATABASE_PASSWORD" \
+            --dry-run=client -o yaml | kubectl apply -f -
+        fi
+
+        # Update deployment with new image
+        kubectl delete deployment agentic-workflow-engine postgres --ignore-not-found=true
+        sed -i "s|gcr.io/adam-466814/agentic-workflow-engine:latest|gcr.io/adam-466814/agentic-workflow-engine:$(git rev-parse --short HEAD)|" kubernetes/deployment.yaml
+        kubectl apply -f kubernetes/deployment.yaml
+
+        # Wait for deployments to be ready
+        kubectl wait --for=condition=available --timeout=300s deployment/postgres
+        kubectl wait --for=condition=available --timeout=300s deployment/agentic-workflow-engine
+
+        # Get service IP
+        echo "Deployment completed. Getting service information..."
+        kubectl get services
+        kubectl get pods
