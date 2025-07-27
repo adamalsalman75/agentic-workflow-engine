@@ -201,27 +201,19 @@ The workflow engine provides an async API with instant response and real-time pr
 
 The workflow executes asynchronously in virtual threads. Use the returned `goalId` to track progress.
 
+**Two ways to monitor progress:**
+- **Goal Status**: High-level summary and completion status
+- **Task Details**: Individual task progress and results
+
 ### 2. Check Goal Status
 
 **Endpoint:** `GET /api/workflow/goal/{goalId}`
 
-**Response:**
+**Response (High-level summary only):**
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "query": "Your original query",
-  "tasks": [
-    {
-      "id": "task-uuid-1",
-      "description": "Task description",
-      "result": "Task execution result",
-      "status": "COMPLETED",
-      "blockingDependencies": [],
-      "informationalDependencies": [],
-      "createdAt": "2024-01-01T10:00:00Z",
-      "completedAt": "2024-01-01T10:05:00Z"
-    }
-  ],
   "summary": "AI-generated summary of the workflow execution",
   "status": "COMPLETED",
   "createdAt": "2024-01-01T10:00:00Z",
@@ -229,9 +221,11 @@ The workflow executes asynchronously in virtual threads. Use the returned `goalI
 }
 ```
 
-### 3. Check Task Progress
+### 3. Check Detailed Task Progress
 
 **Endpoint:** `GET /api/workflow/goal/{goalId}/tasks`
+
+**Use this endpoint to see all individual tasks and their detailed progress:**
 
 **Response:**
 ```json

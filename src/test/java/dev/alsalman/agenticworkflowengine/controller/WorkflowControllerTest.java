@@ -3,6 +3,7 @@ package dev.alsalman.agenticworkflowengine.controller;
 import dev.alsalman.agenticworkflowengine.domain.ExecutionResponse;
 import dev.alsalman.agenticworkflowengine.domain.Goal;
 import dev.alsalman.agenticworkflowengine.domain.GoalStatus;
+import dev.alsalman.agenticworkflowengine.domain.GoalSummary;
 import dev.alsalman.agenticworkflowengine.domain.Task;
 import dev.alsalman.agenticworkflowengine.domain.TaskStatus;
 import dev.alsalman.agenticworkflowengine.service.WorkflowOrchestrator;
@@ -110,11 +111,11 @@ class WorkflowControllerTest {
         when(persistenceService.findGoalById(testGoalId)).thenReturn(testGoal);
 
         // When
-        ResponseEntity<Goal> response = workflowController.getGoal(testGoalId);
+        ResponseEntity<GoalSummary> response = workflowController.getGoal(testGoalId);
 
         // Then
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
-        assertThat(response.getBody()).isEqualTo(testGoal);
+        assertThat(response.getBody()).isEqualTo(GoalSummary.from(testGoal));
         verify(persistenceService).findGoalById(testGoalId);
     }
 
@@ -124,7 +125,7 @@ class WorkflowControllerTest {
         when(persistenceService.findGoalById(testGoalId)).thenReturn(null);
 
         // When
-        ResponseEntity<Goal> response = workflowController.getGoal(testGoalId);
+        ResponseEntity<GoalSummary> response = workflowController.getGoal(testGoalId);
 
         // Then
         assertThat(response.getStatusCode().is4xxClientError()).isTrue();
@@ -137,7 +138,7 @@ class WorkflowControllerTest {
         when(persistenceService.findGoalById(testGoalId)).thenThrow(new RuntimeException("Database error"));
 
         // When
-        ResponseEntity<Goal> response = workflowController.getGoal(testGoalId);
+        ResponseEntity<GoalSummary> response = workflowController.getGoal(testGoalId);
 
         // Then
         assertThat(response.getStatusCode().is5xxServerError()).isTrue();

@@ -2,6 +2,7 @@ package dev.alsalman.agenticworkflowengine.controller;
 
 import dev.alsalman.agenticworkflowengine.domain.ExecutionResponse;
 import dev.alsalman.agenticworkflowengine.domain.Goal;
+import dev.alsalman.agenticworkflowengine.domain.GoalSummary;
 import dev.alsalman.agenticworkflowengine.domain.Task;
 import dev.alsalman.agenticworkflowengine.service.WorkflowOrchestrator;
 import dev.alsalman.agenticworkflowengine.service.WorkflowPersistenceService;
@@ -57,13 +58,13 @@ public class WorkflowController {
     }
     
     @GetMapping("/goal/{goalId}")
-    public ResponseEntity<Goal> getGoal(@PathVariable UUID goalId) {
+    public ResponseEntity<GoalSummary> getGoal(@PathVariable UUID goalId) {
         try {
             Goal goal = persistenceService.findGoalById(goalId);
             if (goal == null) {
                 return ResponseEntity.notFound().build();
             }
-            return ResponseEntity.ok(goal);
+            return ResponseEntity.ok(GoalSummary.from(goal));
         } catch (Exception e) {
             log.error("Failed to retrieve goal: {}", goalId, e);
             return ResponseEntity.internalServerError().build();
