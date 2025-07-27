@@ -167,83 +167,50 @@ The workflow executes asynchronously in virtual threads. Use the returned `goalI
 - `IN_PROGRESS` - Task currently executing (internal use)
 - `COMPLETED` - Task finished successfully
 
-## Complete Workflow Example
+## Complete Workflow Examples
 
-Here's a complete example showing the async workflow process:
+The workflow engine demonstrates two key capabilities: **parallel execution** for independent tasks and **dependency-aware sequential execution** for dependent tasks.
 
-### Step 1: Start a Workflow
-```bash
-# Start the workflow
-curl -X POST http://localhost:8080/api/workflow/execute \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "Help me start a coffee shop business including market research, business plan, permits, and initial setup"
-  }'
+## Example 1: Parallel Execution (Paris Travel Planning)
 
-# Response (immediate):
-# {
-#   "goalId": "550e8400-e29b-41d4-a716-446655440000", 
-#   "message": "Workflow execution started"
-# }
-```
-
-### Step 2: Track Task Progress
-```bash
-# Check task progress in real-time
-GOAL_ID="550e8400-e29b-41d4-a716-446655440000"
-
-curl http://localhost:8080/api/workflow/goal/$GOAL_ID/tasks
-
-# Response shows current task status:
-# [
-#   {
-#     "id": "task-1",
-#     "description": "Conduct Market Research",
-#     "status": "COMPLETED",  
-#     "result": "Market research shows strong demand...",
-#     "createdAt": "2024-01-01T10:00:00Z",
-#     "completedAt": "2024-01-01T10:02:30Z"
-#   },
-#   {
-#     "id": "task-2", 
-#     "description": "Develop Business Plan",
-#     "status": "PENDING",
-#     "blockingDependencies": ["task-1"],
-#     "createdAt": "2024-01-01T10:00:00Z"
-#   }
-# ]
-```
-
-### Step 3: Check Final Results
-```bash
-# Check complete goal status and summary
-curl http://localhost:8080/api/workflow/goal/$GOAL_ID
-
-# Response when workflow completes:
-# {
-#   "id": "550e8400-e29b-41d4-a716-446655440000",
-#   "query": "Help me start a coffee shop business...",
-#   "status": "COMPLETED",
-#   "summary": "Successfully created comprehensive coffee shop business plan...",
-#   "tasks": [...], // All completed tasks
-#   "createdAt": "2024-01-01T10:00:00Z",
-#   "completedAt": "2024-01-01T10:15:45Z"
-# }
-```
-
-## Additional Examples
-
-### 1. Plan a Vacation
+Independent tasks that can run simultaneously:
 
 ```bash
 curl -X POST http://localhost:8080/api/workflow/execute \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "Plan a 7-day vacation to Japan including flights, accommodation, itinerary, and budget"
+    "query": "I am planning a 3-day trip to Paris. Can you create a travel plan for me? The plan should include a suggested daily itinerary, a list of 5 highly-rated French restaurants, and a summary of the public transportation options available"
   }'
 ```
 
-### 2. Start a Business
+**Result: All 3 tasks execute in parallel** ⚡
+
+```json
+[
+  {
+    "description": "Research and create a suggested daily itinerary for the 3-day trip to Paris.",
+    "status": "COMPLETED",
+    "blockingDependencies": [],
+    "completedAt": "2025-07-27T07:21:32.191606Z"
+  },
+  {
+    "description": "Compile a list of 5 highly-rated French restaurants in Paris.",
+    "status": "COMPLETED", 
+    "blockingDependencies": [],
+    "completedAt": "2025-07-27T07:21:36.290143Z"
+  },
+  {
+    "description": "Summarize the public transportation options available in Paris.",
+    "status": "COMPLETED",
+    "blockingDependencies": [],
+    "completedAt": "2025-07-27T07:21:31.585999Z"
+  }
+]
+```
+
+## Example 2: Dependency-Aware Sequential Execution (Coffee Shop Business)
+
+Dependent tasks that must execute in logical order:
 
 ```bash
 curl -X POST http://localhost:8080/api/workflow/execute \
@@ -253,35 +220,49 @@ curl -X POST http://localhost:8080/api/workflow/execute \
   }'
 ```
 
-### 3. Learn a New Skill
+**Result: Smart sequential execution based on dependencies** 🧠
 
-```bash
-curl -X POST http://localhost:8080/api/workflow/execute \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "Create a learning plan to become proficient in Python programming within 3 months"
-  }'
+```json
+[
+  {
+    "description": "Conduct market research to understand target audience, competition, and location feasibility.",
+    "status": "COMPLETED",
+    "blockingDependencies": [],
+    "completedAt": "2025-07-27T07:23:21.142896Z"
+  },
+  {
+    "description": "Create a comprehensive business plan including financial projections, marketing strategy, and operational plan.",
+    "status": "PENDING",
+    "blockingDependencies": ["d8459ff3-214c-4e81-9057-970444086e2a"]
+  },
+  {
+    "description": "Obtain necessary permits and licenses to legally operate the coffee shop.",
+    "status": "COMPLETED",
+    "informationalDependencies": ["102ac44a-05ce-4862-8580-51b54eff582f"],
+    "completedAt": "2025-07-27T07:23:16.129208Z"
+  },
+  {
+    "description": "Identify and secure a location for the coffee shop.",
+    "status": "COMPLETED", 
+    "informationalDependencies": ["d8459ff3-214c-4e81-9057-970444086e2a"],
+    "completedAt": "2025-07-27T07:23:15.619491Z"
+  },
+  {
+    "description": "Set up the coffee shop's physical space, including interior design, equipment purchase, and installation.",
+    "status": "PENDING",
+    "blockingDependencies": ["cb1b29fe-2fc3-4c4a-98e1-58ae3b8ed9f5"]
+  }
+]
 ```
 
-### 4. Organize an Event
+### Key Features Demonstrated
 
-```bash
-curl -X POST http://localhost:8080/api/workflow/execute \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "Organize a company team building event for 50 people including venue, activities, catering, and budget"
-  }'
-```
+✅ **Intelligent Planning**: AI automatically detects which tasks can run in parallel vs. sequentially  
+✅ **Maximum Efficiency**: Independent tasks execute simultaneously  
+✅ **Logical Dependencies**: Tasks wait for required inputs from other tasks  
+✅ **Context Awareness**: Dependent tasks use outputs from completed dependencies  
+✅ **Real-time Tracking**: Monitor progress as tasks complete
 
-### 5. Health and Fitness Goal
-
-```bash
-curl -X POST http://localhost:8080/api/workflow/execute \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "Create a comprehensive plan to lose 20 pounds in 4 months including diet, exercise, and tracking"
-  }'
-```
 
 ## Configuration
 
@@ -350,19 +331,6 @@ The system intelligently executes tasks in parallel based on their dependencies:
 4. **Batch Execution**: Tasks with satisfied dependencies execute in parallel batches
 5. **Dynamic Updates**: Plan reviews after each task may add/modify/remove tasks
 6. **Continues**: Process repeats until all tasks complete
-
-### Example: Vacation Planning
-```
-TASKS:
-1. Research and create a daily itinerary for a 3-day trip to Paris.
-2. Research and compile a list of 5 highly-rated French restaurants in Paris.
-3. Research and summarize the public transportation options available in Paris.
-4. Create a final, integrated travel plan document. (depends on 1, 2, 3 - blocking)
-
-EXECUTION BATCHES:
-Batch 1: [Task 1, Task 2, Task 3] (parallel - no dependencies)
-Batch 2: [Task 4] (depends on all previous tasks)
-```
 
 This approach maximizes efficiency while ensuring correct execution order.
 
