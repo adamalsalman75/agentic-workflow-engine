@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
 class WorkflowOrchestratorTest {
 
     @Mock
-    private TaskPlanAgent taskPlanAgent;
+    private TaskPlanService taskPlanService;
 
     @Mock
     private TaskDependencyResolver taskDependencyResolver;
@@ -41,8 +41,6 @@ class WorkflowOrchestratorTest {
     @Mock
     private GoalAgent goalAgent;
 
-    @Mock
-    private DependencyResolver dependencyResolver;
 
     @Mock
     private WorkflowPersistenceService persistenceService;
@@ -55,6 +53,15 @@ class WorkflowOrchestratorTest {
     
     @Mock
     private PlanReviewService planReviewService;
+    
+    @Mock
+    private GoalService goalService;
+    
+    @Mock
+    private TaskPersistenceService taskPersistenceService;
+    
+    @Mock
+    private WorkflowSummaryService summaryService;
 
     @InjectMocks
     private WorkflowOrchestrator workflowOrchestrator;
@@ -113,16 +120,16 @@ class WorkflowOrchestratorTest {
         Task completedTask2 = testTask2.withResult("Task 2 result");
 
         // Mocking the flow
-        when(persistenceService.findGoalById(testGoalId)).thenReturn(savedGoal);
+        when(goalService.initializeGoal(userQuery, testGoalId)).thenReturn(savedGoal);
         TaskPlan taskPlan = TaskPlan.of(initialTasks, List.of());
-        when(taskPlanAgent.createTaskPlanWithDependencies(userQuery)).thenReturn(taskPlan);
-        when(taskDependencyResolver.coordinateTaskPersistence(any(TaskPlan.class), eq(testGoalId))).thenReturn(initialTasks);
+        when(taskPlanService.createTaskPlan(userQuery)).thenReturn(taskPlan);
+        when(taskPersistenceService.persistTaskPlan(any(TaskPlan.class), eq(testGoalId))).thenReturn(initialTasks);
         lenient().when(persistenceService.saveTask(any(Task.class), eq(testGoalId)))
             .thenReturn(testTask1, testTask2); // Return tasks with IDs
         
         // Mock the new service calls
         when(taskPreparationService.prepareTasks(anyList())).thenReturn(initialTasks);
-        when(dependencyResolver.getExecutableTasks(anyList()))
+        when(taskExecutionService.getExecutableTasks(anyList()))
             .thenReturn(List.of(testTask1, testTask2))
             .thenReturn(List.of()); // Second call returns empty (all tasks completed)
         
@@ -140,8 +147,7 @@ class WorkflowOrchestratorTest {
         when(planReviewService.handlePlanReview(anyList(), any(Task.class), eq(testGoalId)))
             .thenAnswer(invocation -> invocation.getArgument(0)); // Return unchanged
         
-        when(goalAgent.summarizeGoalCompletion(any(Goal.class))).thenReturn(completedGoal);
-        when(persistenceService.saveGoal(completedGoal)).thenReturn(completedGoal);
+        when(summaryService.summarizeWorkflow(any(Goal.class), anyList())).thenReturn(completedGoal);
 
         // When
         WorkflowResult result = workflowOrchestrator.executeWorkflow(userQuery, testGoalId);
@@ -151,13 +157,14 @@ class WorkflowOrchestratorTest {
         assertThat(result.goal().status()).isEqualTo(GoalStatus.COMPLETED);
         
         // Verify interactions with new service structure
-        verify(taskPlanAgent).createTaskPlanWithDependencies(userQuery);
-        verify(taskDependencyResolver).coordinateTaskPersistence(any(TaskPlan.class), eq(testGoalId));
+        verify(goalService).initializeGoal(userQuery, testGoalId);
+        verify(taskPlanService).createTaskPlan(userQuery);
+        verify(taskPersistenceService).persistTaskPlan(any(TaskPlan.class), eq(testGoalId));
         verify(taskPreparationService).prepareTasks(anyList());
         verify(taskExecutionService).executeTasksInParallel(anyList(), eq(userQuery), anyList());
         verify(planReviewService, atLeast(2)).updateTaskInList(anyList(), any(Task.class), eq(testGoalId));
         verify(planReviewService, atLeast(2)).handlePlanReview(anyList(), any(Task.class), eq(testGoalId));
-        verify(goalAgent).summarizeGoalCompletion(any(Goal.class));
+        verify(summaryService).summarizeWorkflow(any(Goal.class), anyList());
     }
 
     @Test
@@ -170,14 +177,14 @@ class WorkflowOrchestratorTest {
         Goal completedGoal = existingGoal.withStatus(GoalStatus.COMPLETED).withSummary("Test summary");
         Task completedTask = testTask1.withResult("Task result");
 
-        when(persistenceService.findGoalById(testGoalId)).thenReturn(existingGoal);
+        when(goalService.initializeGoal(userQuery, testGoalId)).thenReturn(existingGoal);
         TaskPlan taskPlan = TaskPlan.of(initialTasks, List.of());
-        when(taskPlanAgent.createTaskPlanWithDependencies(userQuery)).thenReturn(taskPlan);
-        when(taskDependencyResolver.coordinateTaskPersistence(any(TaskPlan.class), eq(testGoalId))).thenReturn(initialTasks);
+        when(taskPlanService.createTaskPlan(userQuery)).thenReturn(taskPlan);
+        when(taskPersistenceService.persistTaskPlan(any(TaskPlan.class), eq(testGoalId))).thenReturn(initialTasks);
         lenient().when(persistenceService.saveTask(any(Task.class), eq(testGoalId))).thenReturn(testTask1);
         
         when(taskPreparationService.prepareTasks(anyList())).thenReturn(List.of(testTask1));
-        when(dependencyResolver.getExecutableTasks(anyList()))
+        when(taskExecutionService.getExecutableTasks(anyList()))
             .thenReturn(List.of(testTask1))
             .thenReturn(List.of());
         
@@ -192,16 +199,15 @@ class WorkflowOrchestratorTest {
             });
         when(planReviewService.handlePlanReview(anyList(), any(Task.class), eq(testGoalId)))
             .thenAnswer(invocation -> invocation.getArgument(0));
-        when(goalAgent.summarizeGoalCompletion(any(Goal.class))).thenReturn(completedGoal);
-        when(persistenceService.saveGoal(any(Goal.class))).thenReturn(completedGoal);
+        when(summaryService.summarizeWorkflow(any(Goal.class), anyList())).thenReturn(completedGoal);
 
         // When
         WorkflowResult result = workflowOrchestrator.executeWorkflow(userQuery, testGoalId);
 
         // Then
         assertThat(result.success()).isTrue();
-        verify(persistenceService).findGoalById(testGoalId);
-        verify(taskPlanAgent).createTaskPlanWithDependencies(userQuery);
+        verify(goalService).initializeGoal(userQuery, testGoalId);
+        verify(taskPlanService).createTaskPlan(userQuery);
     }
 
     @Test
@@ -215,14 +221,14 @@ class WorkflowOrchestratorTest {
         Goal completedGoal = savedGoal.withStatus(GoalStatus.COMPLETED);
         Task completedTask = testTask1.withResult("Task result");
 
-        when(persistenceService.findGoalById(testGoalId)).thenReturn(savedGoal);
+        when(goalService.initializeGoal(userQuery, testGoalId)).thenReturn(savedGoal);
         TaskPlan taskPlan = TaskPlan.of(initialTasks, List.of());
-        when(taskPlanAgent.createTaskPlanWithDependencies(userQuery)).thenReturn(taskPlan);
-        when(taskDependencyResolver.coordinateTaskPersistence(any(TaskPlan.class), eq(testGoalId))).thenReturn(initialTasks);
+        when(taskPlanService.createTaskPlan(userQuery)).thenReturn(taskPlan);
+        when(taskPersistenceService.persistTaskPlan(any(TaskPlan.class), eq(testGoalId))).thenReturn(initialTasks);
         lenient().when(persistenceService.saveTask(any(Task.class), eq(testGoalId))).thenReturn(testTask1);
         
         when(taskPreparationService.prepareTasks(anyList())).thenReturn(List.of(testTask1));
-        when(dependencyResolver.getExecutableTasks(anyList()))
+        when(taskExecutionService.getExecutableTasks(anyList()))
             .thenReturn(List.of(testTask1))
             .thenReturn(List.of());
         
@@ -237,8 +243,7 @@ class WorkflowOrchestratorTest {
             });
         when(planReviewService.handlePlanReview(anyList(), any(Task.class), eq(testGoalId)))
             .thenAnswer(invocation -> invocation.getArgument(0));
-        when(goalAgent.summarizeGoalCompletion(any(Goal.class))).thenReturn(completedGoal);
-        when(persistenceService.saveGoal(any(Goal.class))).thenReturn(completedGoal);
+        when(summaryService.summarizeWorkflow(any(Goal.class), anyList())).thenReturn(completedGoal);
 
         // When
         WorkflowResult result = workflowOrchestrator.executeWorkflow(userQuery, testGoalId);
@@ -258,14 +263,14 @@ class WorkflowOrchestratorTest {
         Goal completedGoal = savedGoal.withStatus(GoalStatus.COMPLETED);
         Task completedTask = testTask1.withResult("Task result");
 
-        when(persistenceService.findGoalById(testGoalId)).thenReturn(savedGoal);
+        when(goalService.initializeGoal(userQuery, testGoalId)).thenReturn(savedGoal);
         TaskPlan taskPlan = TaskPlan.of(initialTasks, List.of());
-        when(taskPlanAgent.createTaskPlanWithDependencies(userQuery)).thenReturn(taskPlan);
-        when(taskDependencyResolver.coordinateTaskPersistence(any(TaskPlan.class), eq(testGoalId))).thenReturn(initialTasks);
+        when(taskPlanService.createTaskPlan(userQuery)).thenReturn(taskPlan);
+        when(taskPersistenceService.persistTaskPlan(any(TaskPlan.class), eq(testGoalId))).thenReturn(initialTasks);
         lenient().when(persistenceService.saveTask(any(Task.class), eq(testGoalId))).thenReturn(testTask1);
         
         when(taskPreparationService.prepareTasks(anyList())).thenReturn(List.of(testTask1));
-        when(dependencyResolver.getExecutableTasks(anyList()))
+        when(taskExecutionService.getExecutableTasks(anyList()))
             .thenReturn(List.of(testTask1))
             .thenReturn(List.of());
         
@@ -280,8 +285,7 @@ class WorkflowOrchestratorTest {
             });
         when(planReviewService.handlePlanReview(anyList(), any(Task.class), eq(testGoalId)))
             .thenAnswer(invocation -> invocation.getArgument(0));
-        when(goalAgent.summarizeGoalCompletion(any(Goal.class))).thenReturn(completedGoal);
-        when(persistenceService.saveGoal(any(Goal.class))).thenReturn(completedGoal);
+        when(summaryService.summarizeWorkflow(any(Goal.class), anyList())).thenReturn(completedGoal);
 
         // When
         WorkflowResult result = workflowOrchestrator.executeWorkflow(userQuery, testGoalId);
@@ -297,9 +301,12 @@ class WorkflowOrchestratorTest {
         String userQuery = "Test query";
         
         // Mock goal loading to succeed, but task planning to fail
-        when(persistenceService.findGoalById(testGoalId)).thenReturn(testGoal);
-        when(taskPlanAgent.createTaskPlanWithDependencies(userQuery)).thenThrow(new RuntimeException("Database error"));
-        when(persistenceService.saveGoal(any(Goal.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(goalService.initializeGoal(userQuery, testGoalId)).thenReturn(testGoal);
+        when(taskPlanService.createTaskPlan(userQuery)).thenThrow(new RuntimeException("Database error"));
+        when(goalService.markGoalAsFailed(any(Goal.class), anyString())).thenAnswer(invocation -> {
+            Goal goal = invocation.getArgument(0);
+            return new Goal(goal.id(), goal.query(), goal.tasks(), "Workflow failed: Database error", GoalStatus.FAILED, goal.createdAt(), Instant.now());
+        });
 
         // When
         WorkflowResult result = workflowOrchestrator.executeWorkflow(userQuery, testGoalId);
@@ -314,15 +321,20 @@ class WorkflowOrchestratorTest {
         // Given
         String userQuery = "Test query";
         
-        when(persistenceService.findGoalById(testGoalId)).thenReturn(null);
-        lenient().when(persistenceService.saveGoal(any(Goal.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
+        // First call fails, second call in error handler succeeds
+        when(goalService.initializeGoal(userQuery, testGoalId))
+            .thenThrow(new RuntimeException("Goal not found"))
+            .thenReturn(testGoal);
+        when(goalService.markGoalAsFailed(any(Goal.class), anyString())).thenAnswer(invocation -> {
+            Goal goal = invocation.getArgument(0);
+            return new Goal(goal.id(), goal.query(), goal.tasks(), "Workflow failed: Goal not found", GoalStatus.FAILED, goal.createdAt(), Instant.now());
+        });
 
         // When
         WorkflowResult result = workflowOrchestrator.executeWorkflow(userQuery, testGoalId);
 
         // Then
         assertThat(result.success()).isFalse();
-        verify(persistenceService, atLeast(1)).findGoalById(testGoalId);
+        verify(goalService, atLeast(1)).initializeGoal(userQuery, testGoalId);
     }
 }

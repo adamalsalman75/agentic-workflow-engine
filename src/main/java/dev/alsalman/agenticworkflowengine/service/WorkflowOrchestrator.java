@@ -1,177 +1,168 @@
 package dev.alsalman.agenticworkflowengine.service;
 
-import dev.alsalman.agenticworkflowengine.agent.GoalAgent;
-import dev.alsalman.agenticworkflowengine.agent.TaskPlanAgent;
 import dev.alsalman.agenticworkflowengine.domain.Goal;
 import dev.alsalman.agenticworkflowengine.domain.Task;
-import dev.alsalman.agenticworkflowengine.domain.TaskStatus;
+import dev.alsalman.agenticworkflowengine.domain.TaskPlan;
 import dev.alsalman.agenticworkflowengine.domain.WorkflowResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.StructuredTaskScope;
-import java.util.ArrayList;
 
+/**
+ * Orchestrates the workflow execution with three core responsibilities:
+ * 1. Map user's goal into TaskPlan
+ * 2. Execute and review the TaskPlan after every task
+ * 3. Create a summary after everything is executed
+ */
 @Service
 public class WorkflowOrchestrator {
     
     private static final Logger log = LoggerFactory.getLogger(WorkflowOrchestrator.class);
     
-    private final TaskPlanAgent taskPlanAgent;
-    private final TaskDependencyResolver taskDependencyResolver;
-    private final GoalAgent goalAgent;
-    private final DependencyResolver dependencyResolver;
-    private final WorkflowPersistenceService persistenceService;
+    private final GoalService goalService;
+    private final TaskPlanService taskPlanService;
+    private final TaskPersistenceService taskPersistenceService;
     private final TaskPreparationService taskPreparationService;
     private final TaskExecutionService taskExecutionService;
     private final PlanReviewService planReviewService;
+    private final WorkflowSummaryService summaryService;
     
-    public WorkflowOrchestrator(TaskPlanAgent taskPlanAgent, TaskDependencyResolver taskDependencyResolver,
-                              GoalAgent goalAgent, DependencyResolver dependencyResolver, 
-                              WorkflowPersistenceService persistenceService,
+    public WorkflowOrchestrator(GoalService goalService,
+                              TaskPlanService taskPlanService,
+                              TaskPersistenceService taskPersistenceService,
                               TaskPreparationService taskPreparationService,
                               TaskExecutionService taskExecutionService,
-                              PlanReviewService planReviewService) {
-        this.taskPlanAgent = taskPlanAgent;
-        this.taskDependencyResolver = taskDependencyResolver;
-        this.goalAgent = goalAgent;
-        this.dependencyResolver = dependencyResolver;
-        this.persistenceService = persistenceService;
+                              PlanReviewService planReviewService,
+                              WorkflowSummaryService summaryService) {
+        this.goalService = goalService;
+        this.taskPlanService = taskPlanService;
+        this.taskPersistenceService = taskPersistenceService;
         this.taskPreparationService = taskPreparationService;
         this.taskExecutionService = taskExecutionService;
         this.planReviewService = planReviewService;
+        this.summaryService = summaryService;
     }
     
-    
+    /**
+     * Orchestrates the workflow execution for a user query.
+     * 
+     * Core responsibilities:
+     * 1. Map user's goal into TaskPlan
+     * 2. Execute and review the TaskPlan after every task
+     * 3. Create a summary after everything is executed
+     * 
+     * @param userQuery The user's query/request
+     * @param goalId Optional existing goal ID
+     * @return WorkflowResult containing the completed goal
+     */
     public WorkflowResult executeWorkflow(String userQuery, UUID goalId) {
         Instant startTime = Instant.now();
-        log.info("Starting async workflow execution for query: '{}' with goal ID: {}", userQuery, goalId);
+        log.info("Starting workflow execution for query: '{}' with goal ID: {}", userQuery, goalId);
         
         try {
-            // Load existing goal from database
-            Goal goal = persistenceService.findGoalById(goalId);
-            if (goal == null) {
-                throw new IllegalArgumentException("Goal not found with ID: " + goalId);
-            }
+            // 1. Initialize goal (load existing or create new)
+            Goal goal = goalService.initializeGoal(userQuery, goalId);
             
-            return executeWorkflowWithGoal(userQuery, goal, startTime);
+            // 2. Map user's goal into TaskPlan
+            TaskPlan taskPlan = createTaskPlan(userQuery);
+            List<Task> tasks = persistTaskPlan(taskPlan, goal.id());
+            
+            // 3. Execute and review the TaskPlan
+            List<Task> completedTasks = executeTasksWithReview(tasks, userQuery, goal.id());
+            
+            // 4. Create summary after everything is executed
+            Goal completedGoal = summaryService.summarizeWorkflow(goal, completedTasks);
+            
+            Duration executionTime = Duration.between(startTime, Instant.now());
+            log.info("Workflow execution completed successfully in {} ms", executionTime.toMillis());
+            
+            return WorkflowResult.success(completedGoal, startTime);
+            
         } catch (Exception e) {
-            log.error("Async workflow execution failed for query: '{}' with goal ID: {}", userQuery, goalId, e);
-            return handleWorkflowFailure(goalId, userQuery, e, startTime);
+            log.error("Workflow execution failed for query: '{}' with goal ID: {}", userQuery, goalId, e);
+            
+            // Handle failure by updating goal status
+            Goal failedGoal = handleWorkflowFailure(goalId, userQuery, e);
+            return WorkflowResult.failure(failedGoal, startTime);
         }
     }
     
-    private WorkflowResult executeWorkflowWithGoal(String userQuery, Goal goal, Instant startTime) {
-        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
-            
-            // Create initial task plan with dependencies
-            log.info("Creating initial task plan with dependencies asynchronously...");
-            var planningTask = scope.fork(() -> taskPlanAgent.createTaskPlanWithDependencies(userQuery));
-            
-            scope.join();
-            scope.throwIfFailed();
-            
-            var taskPlan = planningTask.get();
-            log.info("Created task plan with {} tasks and {} dependencies", 
-                     taskPlan.tasks().size(), taskPlan.dependencies().size());
-            
-            // Use TaskDependencyAgent to coordinate task persistence and UUID mapping
-            log.info("Coordinating task persistence and dependency mapping...");
-            List<Task> coordinatedTasks = taskDependencyResolver.coordinateTaskPersistence(taskPlan, goal.id());
-            
-            // Update goal with tasks that have correctly mapped dependencies
-            goal = goal.withTasks(coordinatedTasks);
-            log.info("Coordination complete: {} tasks ready for dependency-aware execution", coordinatedTasks.size());
-            coordinatedTasks.forEach(task -> log.debug("Task '{}' with {} blocking deps, {} informational deps", 
-                                                       task.description(), 
-                                                       task.blockingDependencies().size(),
-                                                       task.informationalDependencies().size()));
-            
-            // Execute tasks using dependency-aware parallel execution
-            log.info("Starting dependency-aware task execution phase...");
-            List<Task> currentTasks = taskPreparationService.prepareTasks(goal.tasks());
-            currentTasks = executeTasksWithDependencies(currentTasks, userQuery, goal.id());
-            
-            // Update goal and generate summary
-            goal = goal.withTasks(currentTasks);
-            log.info("Async task execution completed. Generating final summary...");
-            
-            try (var summaryScope = new StructuredTaskScope.ShutdownOnFailure()) {
-                final Goal finalGoal = goal;
-                var summaryTask = summaryScope.fork(() -> goalAgent.summarizeGoalCompletion(finalGoal));
-                
-                summaryScope.join();
-                summaryScope.throwIfFailed();
-                
-                goal = summaryTask.get();
-                
-                // Save final goal with summary to database
-                persistenceService.saveGoal(goal);
-            }
-            
-            log.info("Async workflow execution completed successfully in {} ms", 
-                java.time.Duration.between(startTime, Instant.now()).toMillis());
-            return WorkflowResult.success(goal, startTime);
-            
-        } catch (Exception e) {
-            log.error("Async workflow execution failed for query: '{}'", userQuery, e);
-            return handleWorkflowFailure(goal.id(), userQuery, e, startTime);
-        }
+    /**
+     * Step 1: Map user's goal into TaskPlan
+     */
+    private TaskPlan createTaskPlan(String userQuery) {
+        log.info("Creating task plan for query: '{}'", userQuery);
+        return taskPlanService.createTaskPlan(userQuery);
     }
     
-    private List<Task> executeTasksWithDependencies(List<Task> tasks, String userQuery, UUID goalId) {
-        List<Task> allTasks = new ArrayList<>(tasks);
+    /**
+     * Persist the task plan with proper dependency mapping
+     */
+    private List<Task> persistTaskPlan(TaskPlan taskPlan, UUID goalId) {
+        log.info("Persisting task plan with {} tasks", taskPlan.tasks().size());
+        return taskPersistenceService.persistTaskPlan(taskPlan, goalId);
+    }
+    
+    /**
+     * Step 2: Execute and review the TaskPlan after every task
+     */
+    private List<Task> executeTasksWithReview(List<Task> tasks, String userQuery, UUID goalId) {
+        log.info("Starting task execution with review cycle");
         
-        while (true) {
-            // Get tasks that are ready to execute (dependencies satisfied)
-            List<Task> executableTasks = dependencyResolver.getExecutableTasks(allTasks);
+        // Prepare tasks (validate dependencies)
+        List<Task> preparedTasks = taskPreparationService.prepareTasks(tasks);
+        List<Task> completedTasks = new ArrayList<>();
+        List<Task> remainingTasks = new ArrayList<>(preparedTasks);
+        
+        // Execute tasks based on dependencies
+        while (!remainingTasks.isEmpty()) {
+            List<Task> executableTasks = taskExecutionService.getExecutableTasks(remainingTasks);
             
             if (executableTasks.isEmpty()) {
-                // No more executable tasks - we're done or stuck
-                boolean hasCompletedTasks = allTasks.stream().anyMatch(task -> task.status() == TaskStatus.COMPLETED);
-                boolean hasPendingTasks = allTasks.stream().anyMatch(task -> task.status() == TaskStatus.PENDING);
-                
-                if (hasPendingTasks && hasCompletedTasks) {
-                    log.warn("Workflow stuck - pending tasks exist but none are executable");
-                }
+                log.error("No executable tasks found, but {} tasks remain", remainingTasks.size());
                 break;
             }
             
-            log.info("Found {} executable tasks for parallel execution", executableTasks.size());
+            log.info("Found {} executable tasks for execution", executableTasks.size());
             
-            // Execute all executable tasks in parallel
-            List<Task> completedBatch = taskExecutionService.executeTasksInParallel(executableTasks, userQuery, allTasks);
+            // Execute tasks in parallel when possible
+            List<Task> executedTasks = taskExecutionService.executeTasksInParallel(
+                executableTasks, userQuery, completedTasks
+            );
             
-            // Update the task list with completed tasks and save to database
-            for (Task completedTask : completedBatch) {
-                allTasks = planReviewService.updateTaskInList(allTasks, completedTask, goalId);
-                allTasks = planReviewService.handlePlanReview(allTasks, completedTask, goalId);
+            // Update task lists and review plan after each execution
+            for (Task executedTask : executedTasks) {
+                remainingTasks = planReviewService.updateTaskInList(remainingTasks, executedTask, goalId);
+                completedTasks.add(executedTask);
+                
+                // Review and potentially update remaining tasks
+                remainingTasks = planReviewService.handlePlanReview(remainingTasks, executedTask, goalId);
             }
         }
         
-        return allTasks;
+        return completedTasks;
     }
     
-    
-    private WorkflowResult handleWorkflowFailure(UUID goalId, String userQuery, Exception exception, Instant startTime) {
-        // Try to update goal status to failed
+    /**
+     * Handle workflow failure by updating goal status
+     */
+    private Goal handleWorkflowFailure(UUID goalId, String userQuery, Exception e) {
         try {
-            Goal goal = persistenceService.findGoalById(goalId);
-            if (goal != null) {
-                goal = goal.withStatus(dev.alsalman.agenticworkflowengine.domain.GoalStatus.FAILED);
-                persistenceService.saveGoal(goal);
-                return WorkflowResult.failure(goal, startTime);
-            }
+            Goal goal = goalService.initializeGoal(userQuery, goalId);
+            return goalService.markGoalAsFailed(goal, e.getMessage());
         } catch (Exception ex) {
-            log.error("Failed to update goal status to failed", ex);
+            log.error("Failed to update goal status for failure handling", ex);
+            // Return a minimal failed goal if we can't load/save
+            return new Goal(goalId, userQuery, List.of(), 
+                          "Workflow failed: " + e.getMessage(), 
+                          dev.alsalman.agenticworkflowengine.domain.GoalStatus.FAILED, 
+                          Instant.now(), Instant.now());
         }
-        
-        // Fallback: create a new failed goal
-        Goal failedGoal = Goal.create(userQuery).withStatus(dev.alsalman.agenticworkflowengine.domain.GoalStatus.FAILED);
-        return WorkflowResult.failure(failedGoal, startTime);
     }
 }

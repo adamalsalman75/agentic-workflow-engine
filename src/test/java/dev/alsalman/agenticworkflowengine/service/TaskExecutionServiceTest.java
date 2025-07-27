@@ -28,6 +28,9 @@ class TaskExecutionServiceTest {
 
     @Mock
     private TaskAgent taskAgent;
+    
+    @Mock
+    private DependencyResolver dependencyResolver;
 
     @InjectMocks
     private TaskExecutionService taskExecutionService;
@@ -69,6 +72,21 @@ class TaskExecutionServiceTest {
             Instant.now(),
             null
         );
+    }
+
+    @Test
+    void getExecutableTasks_ShouldDelegateToResolver() {
+        // Given
+        List<Task> remainingTasks = List.of(testTask1, testTask2);
+        List<Task> executableTasks = List.of(testTask1);
+        when(dependencyResolver.getExecutableTasks(remainingTasks)).thenReturn(executableTasks);
+
+        // When
+        List<Task> result = taskExecutionService.getExecutableTasks(remainingTasks);
+
+        // Then
+        assertThat(result).isEqualTo(executableTasks);
+        verify(dependencyResolver).getExecutableTasks(remainingTasks);
     }
 
     @Test

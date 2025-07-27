@@ -16,9 +16,21 @@ public class TaskExecutionService {
     private static final Logger log = LoggerFactory.getLogger(TaskExecutionService.class);
     
     private final TaskAgent taskAgent;
+    private final DependencyResolver dependencyResolver;
     
-    public TaskExecutionService(TaskAgent taskAgent) {
+    public TaskExecutionService(TaskAgent taskAgent, DependencyResolver dependencyResolver) {
         this.taskAgent = taskAgent;
+        this.dependencyResolver = dependencyResolver;
+    }
+    
+    /**
+     * Determines which tasks can be executed based on their dependencies.
+     * 
+     * @param remainingTasks All tasks that haven't been completed yet
+     * @return List of tasks that are ready to execute (no blocking dependencies)
+     */
+    public List<Task> getExecutableTasks(List<Task> remainingTasks) {
+        return dependencyResolver.getExecutableTasks(remainingTasks);
     }
     
     /**
@@ -26,7 +38,7 @@ public class TaskExecutionService {
      * 
      * @param executableTasks The tasks that are ready to execute (dependencies satisfied)
      * @param userQuery The original user query for context
-     * @param allTasks All tasks in the workflow (for dependency context)
+     * @param completedTasks All completed tasks (for dependency context)
      * @return List of completed tasks
      */
     public List<Task> executeTasksInParallel(List<Task> executableTasks, String userQuery, List<Task> allTasks) {
