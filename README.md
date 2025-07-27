@@ -4,13 +4,14 @@ A Spring Boot application that uses AI agents to break down complex goals into t
 
 ## Architecture
 
-The system uses four main AI agents with dependency-aware parallel execution:
+The system uses AI agents and service components with dependency-aware parallel execution:
 
-1. **TaskPlan Agent** - Creates task plans with dependency analysis (blocking vs informational dependencies)
-2. **Task Agent** - Executes individual tasks with context from completed tasks
-3. **Goal Agent** - Summarizes the entire workflow execution and results
-4. **Workflow Orchestrator** - Coordinates parallel execution based on task dependencies
-5. **Dependency Resolver** - Analyzes task dependencies and enables optimal parallel execution
+1. **TaskPlanAgent** - Creates task plans with dependency analysis (blocking vs informational dependencies)
+2. **TaskDependencyResolver** - Coordinates task persistence and ensures dependency UUIDs are correctly mapped between planning and execution phases
+3. **TaskAgent** - Executes individual tasks with context from completed tasks
+4. **GoalAgent** - Summarizes the entire workflow execution and results
+5. **WorkflowOrchestrator** - Coordinates parallel execution based on task dependencies
+6. **DependencyResolver** - Analyzes task dependencies and enables optimal parallel execution
 
 ## Features
 
@@ -343,11 +344,12 @@ The system intelligently executes tasks in parallel based on their dependencies:
 - **Informational Dependencies**: Task can start but benefits from these dependency results
 
 ### Execution Flow
-1. **AI Analysis**: TaskPlan agent analyzes goals and identifies task dependencies
-2. **Validation**: System checks for circular dependencies and validates relationships  
-3. **Batch Execution**: Tasks with satisfied dependencies execute in parallel batches
-4. **Dynamic Updates**: Plan reviews after each task may add/modify/remove tasks
-5. **Continues**: Process repeats until all tasks complete
+1. **AI Analysis**: TaskPlanAgent analyzes goals and identifies task dependencies
+2. **UUID Coordination**: TaskDependencyResolver coordinates task persistence and maps planning UUIDs to database UUIDs
+3. **Validation**: System checks for circular dependencies and validates relationships  
+4. **Batch Execution**: Tasks with satisfied dependencies execute in parallel batches
+5. **Dynamic Updates**: Plan reviews after each task may add/modify/remove tasks
+6. **Continues**: Process repeats until all tasks complete
 
 ### Example: Vacation Planning
 ```

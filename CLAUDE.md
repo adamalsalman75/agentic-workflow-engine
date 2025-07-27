@@ -7,7 +7,8 @@ This is a Spring Boot application built with Java 24 that integrates Spring AI w
 
 ## Core Architecture
 The system uses AI agents with intelligent parallel task execution:
-- **TaskPlan Agent**: Creates flexible task plans, identifying independent tasks for parallel execution and creating dependencies only when logically necessary.
+- **TaskPlanAgent**: Creates flexible task plans, identifying independent tasks for parallel execution and creating dependencies only when logically necessary.
+- **TaskDependencyResolver**: Coordinates task persistence and ensures dependency UUIDs are correctly mapped between planning and execution phases.
 - **TaskAgent**: Executes tasks with context from completed dependencies
 - **GoalAgent**: Summarizes workflow execution results
 - **WorkflowOrchestrator**: Coordinates parallel execution based on task dependencies
@@ -72,7 +73,9 @@ src/
 │   │   │   └── WorkflowResult.java               # Execution results
 │   │   └── service/                              # Business logic
 │   │       ├── WorkflowOrchestrator.java         # Coordinates parallel execution
-│   │       └── DependencyResolver.java           # Analyzes task dependencies
+│   │       ├── TaskDependencyResolver.java       # Coordinates task persistence and UUID mapping
+│   │       ├── DependencyResolver.java           # Analyzes task dependencies
+│   │       └── WorkflowPersistenceService.java   # Database persistence operations
 │   └── resources/
 │       ├── application.properties                # Application configuration
 │       └── schema.sql                           # Database schema with dependencies
@@ -84,6 +87,8 @@ src/
 ## Architecture Notes
 - Full-featured agentic workflow engine with dependency-aware parallel execution
 - Tasks are analyzed for dependencies and executed in optimal parallel batches
+- TaskDependencyResolver coordinates UUID mapping between planning and persistence phases
+- Enhanced TaskPlanAgent prompts emphasize parallel execution when tasks are independent
 - Spring AI integration with OpenAI GPT-4 for intelligent task planning
 - PostgreSQL database stores tasks, goals, and dependency relationships
 - Virtual threads with StructuredTaskScope for efficient async operations
