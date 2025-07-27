@@ -6,13 +6,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a Spring Boot application built with Java 24 that integrates Spring AI with OpenAI models to create an agentic workflow engine with dependency-aware parallel execution. The project uses Maven for build management and follows standard Spring Boot project structure.
 
 ## Core Architecture
-The system uses AI agents with intelligent parallel task execution:
-- **TaskPlanAgent**: Creates flexible task plans, identifying independent tasks for parallel execution and creating dependencies only when logically necessary.
-- **TaskDependencyResolver**: Coordinates task persistence and ensures dependency UUIDs are correctly mapped between planning and execution phases.
-- **TaskAgent**: Executes tasks with context from completed dependencies
+The system uses a pure orchestration pattern with service-based architecture:
+
+### Orchestration Layer
+- **WorkflowOrchestrator**: Pure orchestrator that coordinates workflow steps through service calls. Focuses only on orchestration flow without business logic.
+
+### Service Layer (Business Logic)
+- **GoalService**: Manages goal lifecycle and persistence
+- **TaskPlanService**: Encapsulates task plan creation (wraps TaskPlanAgent)
+- **TaskPersistenceService**: Coordinates task persistence operations
+- **TaskPreparationService**: Handles dependency validation and cleanup
+- **TaskExecutionService**: Manages parallel task execution and dependency resolution
+- **PlanReviewService**: Handles plan reviews and task state updates
+- **WorkflowSummaryService**: Generates workflow summaries
+
+### AI Agent Layer
+- **TaskPlanAgent**: Creates flexible task plans with dependency analysis
+- **TaskAgent**: Executes individual tasks with context from completed tasks
 - **GoalAgent**: Summarizes workflow execution results
-- **WorkflowOrchestrator**: Coordinates parallel execution based on task dependencies
-- **DependencyResolver**: Analyzes and validates task dependencies for optimal execution
+
+### Infrastructure Layer
+- **TaskDependencyResolver**: Coordinates task persistence and UUID mapping
+- **DependencyResolver**: Analyzes and validates task dependencies
+- **WorkflowPersistenceService**: Database persistence operations
 
 ## Key Technologies
 - **Spring Boot 3.5.4**: Main application framework
@@ -71,10 +87,17 @@ src/
 │   │   │   ├── TaskDependency.java               # Dependency relationships
 │   │   │   ├── TaskPlan.java                     # Task plan with dependencies
 │   │   │   └── WorkflowResult.java               # Execution results
-│   │   └── service/                              # Business logic
-│   │       ├── WorkflowOrchestrator.java         # Coordinates parallel execution
-│   │       ├── TaskDependencyResolver.java       # Coordinates task persistence and UUID mapping
-│   │       ├── DependencyResolver.java           # Analyzes task dependencies
+│   │   └── service/                              # Business logic services
+│   │       ├── WorkflowOrchestrator.java         # Pure orchestration coordinator
+│   │       ├── GoalService.java                  # Goal lifecycle management
+│   │       ├── TaskPlanService.java              # Task plan creation service
+│   │       ├── TaskPersistenceService.java       # Task persistence coordination
+│   │       ├── TaskPreparationService.java       # Task validation and cleanup
+│   │       ├── TaskExecutionService.java         # Parallel execution and dependency resolution
+│   │       ├── PlanReviewService.java            # Plan review and updates
+│   │       ├── WorkflowSummaryService.java       # Summary generation
+│   │       ├── TaskDependencyResolver.java       # Task persistence and UUID mapping
+│   │       ├── DependencyResolver.java           # Dependency analysis
 │   │       └── WorkflowPersistenceService.java   # Database persistence operations
 │   └── resources/
 │       ├── application.properties                # Application configuration
@@ -85,14 +108,16 @@ src/
 ```
 
 ## Architecture Notes
-- Full-featured agentic workflow engine with dependency-aware parallel execution
-- Tasks are analyzed for dependencies and executed in optimal parallel batches
-- TaskDependencyResolver coordinates UUID mapping between planning and persistence phases
-- Enhanced TaskPlanAgent prompts emphasize parallel execution when tasks are independent
-- Spring AI integration with OpenAI GPT-4 for intelligent task planning
-- PostgreSQL database stores tasks, goals, and dependency relationships
-- Virtual threads with StructuredTaskScope for efficient async operations
-- Comprehensive logging for debugging parallel execution flows
+- **Pure Orchestration Pattern**: WorkflowOrchestrator contains no business logic, only coordinates service calls
+- **Service-Based Architecture**: Each service has single responsibility and encapsulates related business logic
+- **AI Agent Encapsulation**: Agents are wrapped by services, not directly used by orchestrator
+- **Dependency-Aware Parallel Execution**: Tasks analyzed and executed in optimal parallel batches
+- **Enterprise-Ready Layering**: Clear separation between orchestration, business logic, and infrastructure
+- **Spring AI Integration**: OpenAI GPT-4 for intelligent task planning through service layer
+- **PostgreSQL Persistence**: Shared infrastructure layer for data consistency
+- **Virtual Threads**: StructuredTaskScope for efficient async operations
+- **Comprehensive Testing**: Each service independently testable with full coverage
+- **Immutable Domain Models**: Records-based domain design for thread safety
 
 ## Configuration
 - Application configuration is managed through `application.properties`

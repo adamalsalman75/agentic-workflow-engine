@@ -4,14 +4,97 @@ A Spring Boot application that uses AI agents to break down complex goals into t
 
 ## Architecture
 
-The system uses AI agents and service components with dependency-aware parallel execution:
+The system uses a **pure orchestration pattern** with clean service separation and AI agent integration:
 
-1. **TaskPlanAgent** - Creates task plans with dependency analysis (blocking vs informational dependencies)
-2. **TaskDependencyResolver** - Coordinates task persistence and ensures dependency UUIDs are correctly mapped between planning and execution phases
-3. **TaskAgent** - Executes individual tasks with context from completed tasks
-4. **GoalAgent** - Summarizes the entire workflow execution and results
-5. **WorkflowOrchestrator** - Coordinates parallel execution based on task dependencies
-6. **DependencyResolver** - Analyzes task dependencies and enables optimal parallel execution
+```mermaid
+graph TB
+    subgraph "Orchestration Layer"
+        WO[WorkflowOrchestrator]
+    end
+    
+    subgraph "Service Layer (Business Logic)"
+        GS[GoalService]
+        TPS[TaskPlanService]
+        TPeS[TaskPersistenceService]
+        TPrS[TaskPreparationService]
+        TES[TaskExecutionService]
+        PRS[PlanReviewService]
+        WSS[WorkflowSummaryService]
+    end
+    
+    subgraph "AI Agent Layer"
+        TPA[TaskPlanAgent]
+        TA[TaskAgent]
+        GA[GoalAgent]
+    end
+    
+    subgraph "Infrastructure Layer"
+        TDR[TaskDependencyResolver]
+        DR[DependencyResolver]
+        WPS[WorkflowPersistenceService]
+        DB[(PostgreSQL)]
+    end
+    
+    %% Orchestration Flow
+    WO --> GS
+    WO --> TPS
+    WO --> TPeS
+    WO --> TPrS
+    WO --> TES
+    WO --> PRS
+    WO --> WSS
+    
+    %% Service to Agent Dependencies
+    TPS --> TPA
+    TES --> TA
+    WSS --> GA
+    
+    %% Service to Infrastructure Dependencies
+    GS --> WPS
+    TPeS --> TDR
+    TES --> DR
+    PRS --> WPS
+    
+    %% Infrastructure Dependencies
+    TDR --> WPS
+    WPS --> DB
+    
+    %% Styling
+    classDef orchestration fill:#e1f5fe
+    classDef service fill:#f3e5f5
+    classDef agent fill:#fff3e0
+    classDef infrastructure fill:#e8f5e8
+    
+    class WO orchestration
+    class GS,TPS,TPeS,TPrS,TES,PRS,WSS service
+    class TPA,TA,GA agent
+    class TDR,DR,WPS,DB infrastructure
+```
+
+### Architecture Layers
+
+#### 🎯 **Orchestration Layer**
+- **WorkflowOrchestrator**: Pure orchestrator with no business logic - only coordinates service calls
+
+#### ⚙️ **Service Layer (Business Logic)**
+- **GoalService**: Goal lifecycle management and persistence
+- **TaskPlanService**: Task plan creation (encapsulates TaskPlanAgent)
+- **TaskPersistenceService**: Task persistence coordination
+- **TaskPreparationService**: Dependency validation and cleanup
+- **TaskExecutionService**: Parallel execution and dependency resolution
+- **PlanReviewService**: Plan reviews and task state updates
+- **WorkflowSummaryService**: Summary generation (encapsulates GoalAgent)
+
+#### 🧠 **AI Agent Layer**
+- **TaskPlanAgent**: Creates intelligent task plans with dependency analysis
+- **TaskAgent**: Executes individual tasks with context awareness
+- **GoalAgent**: Generates comprehensive workflow summaries
+
+#### 🏗️ **Infrastructure Layer**
+- **TaskDependencyResolver**: Coordinates persistence and UUID mapping
+- **DependencyResolver**: Analyzes task dependencies for parallel execution
+- **WorkflowPersistenceService**: Shared database access layer
+- **PostgreSQL**: Persistent storage for goals, tasks, and dependencies
 
 ## Features
 
@@ -324,15 +407,67 @@ The system intelligently executes tasks in parallel based on their dependencies:
 - **Blocking Dependencies**: Task cannot start until these dependencies complete
 - **Informational Dependencies**: Task can start but benefits from these dependency results
 
-### Execution Flow
-1. **AI Analysis**: TaskPlanAgent analyzes goals and identifies task dependencies
-2. **UUID Coordination**: TaskDependencyResolver coordinates task persistence and maps planning UUIDs to database UUIDs
-3. **Validation**: System checks for circular dependencies and validates relationships  
-4. **Batch Execution**: Tasks with satisfied dependencies execute in parallel batches
-5. **Dynamic Updates**: Plan reviews after each task may add/modify/remove tasks
-6. **Continues**: Process repeats until all tasks complete
+### Workflow Execution Flow
 
-This approach maximizes efficiency while ensuring correct execution order.
+```mermaid
+sequenceDiagram
+    participant API as REST API
+    participant WO as WorkflowOrchestrator
+    participant GS as GoalService
+    participant TPS as TaskPlanService
+    participant TPeS as TaskPersistenceService
+    participant TES as TaskExecutionService
+    participant WSS as WorkflowSummaryService
+    participant DB as Database
+    
+    API->>WO: executeWorkflow(userQuery)
+    
+    Note over WO: 1. Initialize Goal
+    WO->>GS: initializeGoal(userQuery, goalId)
+    GS->>DB: save/load goal
+    GS-->>WO: Goal
+    
+    Note over WO: 2. Create Task Plan
+    WO->>TPS: createTaskPlan(userQuery)
+    TPS->>TPA: createTaskPlanWithDependencies()
+    TPS-->>WO: TaskPlan
+    
+    Note over WO: 3. Persist Tasks
+    WO->>TPeS: persistTaskPlan(taskPlan, goalId)
+    TPeS->>DB: save tasks with dependencies
+    TPeS-->>WO: List<Task>
+    
+    Note over WO: 4. Execute Tasks in Batches
+    loop Until All Tasks Complete
+        WO->>TES: getExecutableTasks(remainingTasks)
+        TES-->>WO: executableTasks
+        
+        WO->>TES: executeTasksInParallel(executableTasks)
+        TES->>TA: execute tasks in parallel
+        TES-->>WO: completedTasks
+        
+        WO->>PRS: updateTaskInList() & handlePlanReview()
+        PRS->>DB: update task status
+        PRS-->>WO: updatedTasks
+    end
+    
+    Note over WO: 5. Generate Summary
+    WO->>WSS: summarizeWorkflow(goal, completedTasks)
+    WSS->>GA: summarizeGoalCompletion()
+    WSS->>GS: markGoalAsCompleted()
+    WSS-->>WO: completedGoal
+    
+    WO-->>API: WorkflowResult
+```
+
+### Key Benefits
+
+✅ **Pure Orchestration**: Orchestrator focuses only on coordination, no business logic  
+✅ **Service Encapsulation**: Each service has single responsibility and clear boundaries  
+✅ **AI Agent Isolation**: Agents wrapped by services, not directly accessed by orchestrator  
+✅ **Independent Testing**: Each service can be tested in isolation with comprehensive coverage  
+✅ **Enterprise Architecture**: Clean layering suitable for large-scale applications  
+✅ **Parallel Efficiency**: Intelligent dependency resolution maximizes concurrent execution
 
 ## Logging
 
@@ -354,11 +489,15 @@ This application leverages Java 24 preview features:
 
 ## Architecture Principles
 
-- **Immutable Records** - All domain models use immutable Java records
+- **Pure Orchestration Pattern** - Orchestrator contains zero business logic, only coordinates services
+- **Service-Based Architecture** - Each service encapsulates specific business concerns
+- **AI Agent Encapsulation** - Agents wrapped by services for clean separation
+- **Immutable Records** - All domain models use immutable Java records for thread safety
 - **Virtual Threads** - Async operations use virtual threads over reactive programming
-- **Spring Data JDBC** - Simple, direct database access
+- **Spring Data JDBC** - Simple, direct database access through shared persistence layer
 - **PostgreSQL** - Reliable, scalable database storage
 - **Structured Concurrency** - Better async code organization and error handling
+- **Enterprise Layering** - Clear separation between orchestration, business logic, and infrastructure
 
 ## Troubleshooting
 
