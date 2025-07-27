@@ -202,7 +202,7 @@ public class WorkflowOrchestrator {
                 // Review and potentially update plan after each completed task
                 if (completedTask.status() == TaskStatus.COMPLETED) {
                     log.debug("Starting plan review after completing task: '{}'", 
-                             limitText(completedTask.description(), 80));
+                             completedTask.description());
                     
                     List<Task> updatedTasks = reviewPlanAfterTask(allTasks, completedTask);
                     
@@ -221,7 +221,7 @@ public class WorkflowOrchestrator {
                         for (Task task : updatedTasks) {
                             if (task.status() == TaskStatus.PENDING && task.id() == null) {
                                 log.info("💡 NEW TASK FROM PLAN REVIEW: '{}'", 
-                                        limitText(task.description(), 100));
+                                        task.description());
                                 Task savedTask = persistenceService.saveTask(task, goalId);
                                 persistedUpdatedTasks.add(savedTask);
                             } else {
@@ -313,12 +313,5 @@ public class WorkflowOrchestrator {
             task.createdAt(),
             task.completedAt()
         );
-    }
-    
-    private String limitText(String text, int maxLength) {
-        if (text == null || text.length() <= maxLength) {
-            return text;
-        }
-        return text.substring(0, maxLength) + "...";
     }
 }

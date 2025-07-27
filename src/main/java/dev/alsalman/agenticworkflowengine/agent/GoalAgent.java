@@ -16,9 +16,9 @@ public class GoalAgent {
     
     public Goal summarizeGoalCompletion(Goal goal) {
         String tasksInfo = goal.tasks().stream()
-            .map(task -> "- " + limitText(task.description(), 60) + 
+            .map(task -> "- " + task.description() + 
                         " [" + task.status() + "] " + 
-                        limitText(task.result() != null ? task.result() : "No result", 80))
+                        (task.result() != null ? task.result() : "No result"))
             .reduce("", (acc, taskInfo) -> acc + taskInfo + "\n");
             
         long completedTasks = goal.tasks().stream()
@@ -39,7 +39,7 @@ public class GoalAgent {
             
             Provide concise summary: goal achievement, key results, issues, overall assessment.
             """.formatted(
-                limitText(goal.query(), 150),
+                goal.query(),
                 completedTasks,
                 goal.tasks().size(),
                 failedTasks,
@@ -48,12 +48,5 @@ public class GoalAgent {
             
         String summary = resilientChatClient.call("goal summarization", prompt);
         return goal.withSummary(summary);
-    }
-    
-    private String limitText(String text, int maxLength) {
-        if (text == null || text.length() <= maxLength) {
-            return text;
-        }
-        return text.substring(0, maxLength) + "...";
     }
 }

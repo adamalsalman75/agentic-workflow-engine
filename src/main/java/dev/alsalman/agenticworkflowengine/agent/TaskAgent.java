@@ -38,8 +38,8 @@ public class TaskAgent {
                     String depType = (blockingDeps != null && blockingDeps.contains(dep.id())) ? "REQUIRED" : "REFERENCE";
                     return String.format("%s DEPENDENCY: %s\nResult: %s", 
                                        depType,
-                                       limitText(dep.description(), 100),
-                                       limitText(dep.result(), 300));
+                                       dep.description(),
+                                       dep.result());
                 })
                 .reduce("", (acc, depInfo) -> acc + depInfo + "\n\n");
                 
@@ -56,14 +56,14 @@ public class TaskAgent {
                 
                 Provide specific, actionable result:
                 """.formatted(task.description(), 
-                            limitText(originalGoal, 150), 
+                            originalGoal, 
                             dependencyContext);
         } else {
             // No dependencies - provide general context from recent completed tasks
             String generalContext = completedTasks.stream()
                 .limit(3)
-                .map(completed -> "- " + limitText(completed.description(), 80) + 
-                                " (" + limitText(completed.result(), 100) + ")")
+                .map(completed -> "- " + completed.description() + 
+                                " (" + completed.result() + ")")
                 .reduce("", (acc, taskInfo) -> acc + taskInfo + "\n");
                 
             prompt = """
@@ -76,7 +76,7 @@ public class TaskAgent {
                 
                 Provide specific, actionable result:
                 """.formatted(task.description(), 
-                            limitText(originalGoal, 150), 
+                            originalGoal, 
                             generalContext);
         }
             
@@ -87,12 +87,5 @@ public class TaskAgent {
             return task.withStatus(TaskStatus.FAILED)
                 .withResult("Task execution failed: " + e.getMessage());
         }
-    }
-    
-    private String limitText(String text, int maxLength) {
-        if (text == null || text.length() <= maxLength) {
-            return text;
-        }
-        return text.substring(0, maxLength) + "...";
     }
 }

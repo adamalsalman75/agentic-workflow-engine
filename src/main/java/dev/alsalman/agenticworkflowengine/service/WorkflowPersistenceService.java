@@ -71,7 +71,7 @@ public class WorkflowPersistenceService {
     @Transactional
     public Task saveTask(Task task, UUID goalId) {
         log.debug("Persisting task: '{}' [{}] with status: {}", 
-                 limitText(task.description(), 60), task.id(), task.status());
+                 task.description(), task.id(), task.status());
         
         TaskEntity taskEntity;
         TaskEntity saved;
@@ -112,14 +112,6 @@ public class WorkflowPersistenceService {
         
         return savedTask;
     }
-    
-    private String limitText(String text, int maxLength) {
-        if (text == null || text.length() <= maxLength) {
-            return text;
-        }
-        return text.substring(0, maxLength) + "...";
-    }
-    
     
     
     @Transactional(readOnly = true)

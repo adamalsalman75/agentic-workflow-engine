@@ -276,8 +276,8 @@ public class TaskPlanAgent {
             Based on this, should the remaining tasks be changed?
             Respond with "NO_CHANGES" if the plan is still valid. Otherwise, provide a new, complete list of the remaining tasks.
             """.formatted(
-                limitText(completedTask.description(), 100),
-                limitText(completedTask.result(), 200),
+                completedTask.description(),
+                completedTask.result(),
                 completedCount,
                 pendingTasksInfo
             );
@@ -298,12 +298,5 @@ public class TaskPlanAgent {
         // For now, return unchanged tasks to preserve dependencies
         // TODO: Implement proper task update that preserves dependencies
         return currentTasks;
-    }
-    
-    private String limitText(String text, int maxLength) {
-        if (text == null || text.length() <= maxLength) {
-            return text;
-        }
-        return text.substring(0, maxLength) + "...";
     }
 }
