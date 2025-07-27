@@ -48,12 +48,15 @@ graph TB
     TPS --> TPA
     TES --> TA
     WSS --> GA
+    PRS --> TPA
     
     %% Service to Infrastructure Dependencies
     GS --> WPS
     TPeS --> TDR
     TES --> DR
+    TPrS --> DR
     PRS --> WPS
+    WSS --> GS
     
     %% Infrastructure Dependencies
     TDR --> WPS
@@ -415,46 +418,85 @@ sequenceDiagram
     participant WO as WorkflowOrchestrator
     participant GS as GoalService
     participant TPS as TaskPlanService
+    participant TPA as TaskPlanAgent
     participant TPeS as TaskPersistenceService
+    participant TDR as TaskDependencyResolver
+    participant TPrS as TaskPreparationService
     participant TES as TaskExecutionService
+    participant TA as TaskAgent
+    participant DR as DependencyResolver
+    participant PRS as PlanReviewService
     participant WSS as WorkflowSummaryService
+    participant GA as GoalAgent
+    participant WPS as WorkflowPersistenceService
     participant DB as Database
     
     API->>WO: executeWorkflow(userQuery)
     
     Note over WO: 1. Initialize Goal
     WO->>GS: initializeGoal(userQuery, goalId)
-    GS->>DB: save/load goal
+    GS->>WPS: findGoalById() / saveGoal()
+    WPS->>DB: query/insert goal
+    WPS-->>GS: Goal
     GS-->>WO: Goal
     
     Note over WO: 2. Create Task Plan
     WO->>TPS: createTaskPlan(userQuery)
-    TPS->>TPA: createTaskPlanWithDependencies()
+    TPS->>TPA: createTaskPlanWithDependencies(userQuery)
+    TPA-->>TPS: TaskPlan with dependencies
     TPS-->>WO: TaskPlan
     
     Note over WO: 3. Persist Tasks
     WO->>TPeS: persistTaskPlan(taskPlan, goalId)
-    TPeS->>DB: save tasks with dependencies
+    TPeS->>TDR: coordinateTaskPersistence(taskPlan, goalId)
+    TDR->>WPS: saveTask() for each task
+    WPS->>DB: insert tasks and dependencies
+    WPS-->>TDR: persisted tasks
+    TDR-->>TPeS: List<Task> with UUIDs
     TPeS-->>WO: List<Task>
     
-    Note over WO: 4. Execute Tasks in Batches
+    Note over WO: 4. Prepare Tasks
+    WO->>TPrS: prepareTasks(tasks)
+    TPrS->>DR: validateDependencies() & hasCircularDependencies()
+    DR-->>TPrS: validation results
+    TPrS-->>WO: prepared tasks
+    
+    Note over WO: 5. Execute Tasks in Batches
     loop Until All Tasks Complete
         WO->>TES: getExecutableTasks(remainingTasks)
+        TES->>DR: getExecutableTasks(remainingTasks)
+        DR-->>TES: executable tasks
         TES-->>WO: executableTasks
         
         WO->>TES: executeTasksInParallel(executableTasks)
         TES->>TA: execute tasks in parallel
+        TA-->>TES: completed tasks
         TES-->>WO: completedTasks
         
-        WO->>PRS: updateTaskInList() & handlePlanReview()
-        PRS->>DB: update task status
-        PRS-->>WO: updatedTasks
+        WO->>PRS: updateTaskInList(tasks, completedTask)
+        PRS->>WPS: saveTask(updatedTask)
+        WPS->>DB: update task
+        PRS-->>WO: updated task list
+        
+        WO->>PRS: handlePlanReview(tasks, completedTask)
+        PRS->>TPA: reviewAndUpdatePlan(tasks, completedTask)
+        TPA-->>PRS: potentially revised tasks
+        alt If new tasks created
+            PRS->>WPS: saveTask() for new tasks
+            WPS->>DB: insert new tasks
+        end
+        PRS-->>WO: updated remaining tasks
     end
     
-    Note over WO: 5. Generate Summary
+    Note over WO: 6. Generate Summary
     WO->>WSS: summarizeWorkflow(goal, completedTasks)
-    WSS->>GA: summarizeGoalCompletion()
-    WSS->>GS: markGoalAsCompleted()
+    WSS->>GA: summarizeGoalCompletion(goalWithTasks)
+    GA-->>WSS: goal with AI summary
+    WSS->>GS: markGoalAsCompleted(goal, summary)
+    GS->>WPS: saveGoal(completedGoal)
+    WPS->>DB: update goal
+    WPS-->>GS: saved goal
+    GS-->>WSS: completed goal
     WSS-->>WO: completedGoal
     
     WO-->>API: WorkflowResult
