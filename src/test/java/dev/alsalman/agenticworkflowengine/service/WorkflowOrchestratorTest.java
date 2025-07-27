@@ -1,7 +1,6 @@
 package dev.alsalman.agenticworkflowengine.service;
 
 import dev.alsalman.agenticworkflowengine.agent.GoalAgent;
-import dev.alsalman.agenticworkflowengine.agent.TaskAgent;
 import dev.alsalman.agenticworkflowengine.agent.TaskPlanAgent;
 import dev.alsalman.agenticworkflowengine.domain.Goal;
 import dev.alsalman.agenticworkflowengine.domain.GoalStatus;
@@ -40,9 +39,6 @@ class WorkflowOrchestratorTest {
     private TaskDependencyResolver taskDependencyResolver;
 
     @Mock
-    private TaskAgent taskAgent;
-
-    @Mock
     private GoalAgent goalAgent;
 
     @Mock
@@ -50,6 +46,15 @@ class WorkflowOrchestratorTest {
 
     @Mock
     private WorkflowPersistenceService persistenceService;
+    
+    @Mock
+    private TaskPreparationService taskPreparationService;
+    
+    @Mock
+    private TaskExecutionService taskExecutionService;
+    
+    @Mock
+    private PlanReviewService planReviewService;
 
     @InjectMocks
     private WorkflowOrchestrator workflowOrchestrator;
@@ -112,17 +117,28 @@ class WorkflowOrchestratorTest {
         TaskPlan taskPlan = TaskPlan.of(initialTasks, List.of());
         when(taskPlanAgent.createTaskPlanWithDependencies(userQuery)).thenReturn(taskPlan);
         when(taskDependencyResolver.coordinateTaskPersistence(any(TaskPlan.class), eq(testGoalId))).thenReturn(initialTasks);
-        when(persistenceService.saveTask(any(Task.class), eq(testGoalId)))
+        lenient().when(persistenceService.saveTask(any(Task.class), eq(testGoalId)))
             .thenReturn(testTask1, testTask2); // Return tasks with IDs
         
-        when(dependencyResolver.validateDependencies(anyList())).thenReturn(List.of());
-        when(dependencyResolver.hasCircularDependencies(anyList())).thenReturn(false);
+        // Mock the new service calls
+        when(taskPreparationService.prepareTasks(anyList())).thenReturn(initialTasks);
         when(dependencyResolver.getExecutableTasks(anyList()))
             .thenReturn(List.of(testTask1, testTask2))
             .thenReturn(List.of()); // Second call returns empty (all tasks completed)
         
-        when(taskAgent.executeTask(eq(testTask1), eq(userQuery), anyList())).thenReturn(completedTask1);
-        when(taskAgent.executeTask(eq(testTask2), eq(userQuery), anyList())).thenReturn(completedTask2);
+        when(taskExecutionService.executeTasksInParallel(anyList(), eq(userQuery), anyList()))
+            .thenReturn(List.of(completedTask1, completedTask2));
+        when(planReviewService.updateTaskInList(anyList(), any(Task.class), eq(testGoalId)))
+            .thenAnswer(invocation -> {
+                List<Task> tasks = invocation.getArgument(0);
+                Task completedTask = invocation.getArgument(1);
+                // Simple mock: replace task in list
+                return tasks.stream()
+                    .map(t -> t.id().equals(completedTask.id()) ? completedTask : t)
+                    .toList();
+            });
+        when(planReviewService.handlePlanReview(anyList(), any(Task.class), eq(testGoalId)))
+            .thenAnswer(invocation -> invocation.getArgument(0)); // Return unchanged
         
         when(goalAgent.summarizeGoalCompletion(any(Goal.class))).thenReturn(completedGoal);
         when(persistenceService.saveGoal(completedGoal)).thenReturn(completedGoal);
@@ -134,12 +150,13 @@ class WorkflowOrchestratorTest {
         assertThat(result.success()).isTrue();
         assertThat(result.goal().status()).isEqualTo(GoalStatus.COMPLETED);
         
-        // Verify interactions
+        // Verify interactions with new service structure
         verify(taskPlanAgent).createTaskPlanWithDependencies(userQuery);
         verify(taskDependencyResolver).coordinateTaskPersistence(any(TaskPlan.class), eq(testGoalId));
-        verify(persistenceService, atLeast(2)).saveTask(any(Task.class), eq(testGoalId)); // Initial saves + completion saves
-        verify(taskAgent).executeTask(eq(testTask1), eq(userQuery), anyList());
-        verify(taskAgent).executeTask(eq(testTask2), eq(userQuery), anyList());
+        verify(taskPreparationService).prepareTasks(anyList());
+        verify(taskExecutionService).executeTasksInParallel(anyList(), eq(userQuery), anyList());
+        verify(planReviewService, atLeast(2)).updateTaskInList(anyList(), any(Task.class), eq(testGoalId));
+        verify(planReviewService, atLeast(2)).handlePlanReview(anyList(), any(Task.class), eq(testGoalId));
         verify(goalAgent).summarizeGoalCompletion(any(Goal.class));
     }
 
@@ -157,15 +174,24 @@ class WorkflowOrchestratorTest {
         TaskPlan taskPlan = TaskPlan.of(initialTasks, List.of());
         when(taskPlanAgent.createTaskPlanWithDependencies(userQuery)).thenReturn(taskPlan);
         when(taskDependencyResolver.coordinateTaskPersistence(any(TaskPlan.class), eq(testGoalId))).thenReturn(initialTasks);
-        when(persistenceService.saveTask(any(Task.class), eq(testGoalId))).thenReturn(testTask1);
+        lenient().when(persistenceService.saveTask(any(Task.class), eq(testGoalId))).thenReturn(testTask1);
         
-        when(dependencyResolver.validateDependencies(anyList())).thenReturn(List.of());
-        when(dependencyResolver.hasCircularDependencies(anyList())).thenReturn(false);
+        when(taskPreparationService.prepareTasks(anyList())).thenReturn(List.of(testTask1));
         when(dependencyResolver.getExecutableTasks(anyList()))
             .thenReturn(List.of(testTask1))
             .thenReturn(List.of());
         
-        when(taskAgent.executeTask(eq(testTask1), eq(userQuery), anyList())).thenReturn(completedTask);
+        when(taskExecutionService.executeTasksInParallel(anyList(), eq(userQuery), anyList())).thenReturn(List.of(completedTask));
+        when(planReviewService.updateTaskInList(anyList(), any(Task.class), eq(testGoalId)))
+            .thenAnswer(invocation -> {
+                List<Task> tasks = invocation.getArgument(0);
+                Task updatedTask = invocation.getArgument(1);
+                return tasks.stream()
+                    .map(t -> t.id().equals(updatedTask.id()) ? updatedTask : t)
+                    .toList();
+            });
+        when(planReviewService.handlePlanReview(anyList(), any(Task.class), eq(testGoalId)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
         when(goalAgent.summarizeGoalCompletion(any(Goal.class))).thenReturn(completedGoal);
         when(persistenceService.saveGoal(any(Goal.class))).thenReturn(completedGoal);
 
@@ -193,15 +219,24 @@ class WorkflowOrchestratorTest {
         TaskPlan taskPlan = TaskPlan.of(initialTasks, List.of());
         when(taskPlanAgent.createTaskPlanWithDependencies(userQuery)).thenReturn(taskPlan);
         when(taskDependencyResolver.coordinateTaskPersistence(any(TaskPlan.class), eq(testGoalId))).thenReturn(initialTasks);
-        when(persistenceService.saveTask(any(Task.class), eq(testGoalId))).thenReturn(testTask1);
+        lenient().when(persistenceService.saveTask(any(Task.class), eq(testGoalId))).thenReturn(testTask1);
         
-        when(dependencyResolver.validateDependencies(anyList())).thenReturn(validationErrors);
-        when(dependencyResolver.hasCircularDependencies(anyList())).thenReturn(false);
+        when(taskPreparationService.prepareTasks(anyList())).thenReturn(List.of(testTask1));
         when(dependencyResolver.getExecutableTasks(anyList()))
             .thenReturn(List.of(testTask1))
             .thenReturn(List.of());
         
-        when(taskAgent.executeTask(any(Task.class), eq(userQuery), anyList())).thenReturn(completedTask);
+        when(taskExecutionService.executeTasksInParallel(anyList(), eq(userQuery), anyList())).thenReturn(List.of(completedTask));
+        when(planReviewService.updateTaskInList(anyList(), any(Task.class), eq(testGoalId)))
+            .thenAnswer(invocation -> {
+                List<Task> tasks = invocation.getArgument(0);
+                Task updatedTask = invocation.getArgument(1);
+                return tasks.stream()
+                    .map(t -> t.id().equals(updatedTask.id()) ? updatedTask : t)
+                    .toList();
+            });
+        when(planReviewService.handlePlanReview(anyList(), any(Task.class), eq(testGoalId)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
         when(goalAgent.summarizeGoalCompletion(any(Goal.class))).thenReturn(completedGoal);
         when(persistenceService.saveGoal(any(Goal.class))).thenReturn(completedGoal);
 
@@ -210,7 +245,7 @@ class WorkflowOrchestratorTest {
 
         // Then
         assertThat(result.success()).isTrue();
-        verify(dependencyResolver).validateDependencies(anyList());
+        verify(taskPreparationService).prepareTasks(anyList());
     }
 
     @Test
@@ -227,15 +262,24 @@ class WorkflowOrchestratorTest {
         TaskPlan taskPlan = TaskPlan.of(initialTasks, List.of());
         when(taskPlanAgent.createTaskPlanWithDependencies(userQuery)).thenReturn(taskPlan);
         when(taskDependencyResolver.coordinateTaskPersistence(any(TaskPlan.class), eq(testGoalId))).thenReturn(initialTasks);
-        when(persistenceService.saveTask(any(Task.class), eq(testGoalId))).thenReturn(testTask1);
+        lenient().when(persistenceService.saveTask(any(Task.class), eq(testGoalId))).thenReturn(testTask1);
         
-        when(dependencyResolver.validateDependencies(anyList())).thenReturn(List.of());
-        when(dependencyResolver.hasCircularDependencies(anyList())).thenReturn(true);
+        when(taskPreparationService.prepareTasks(anyList())).thenReturn(List.of(testTask1));
         when(dependencyResolver.getExecutableTasks(anyList()))
             .thenReturn(List.of(testTask1))
             .thenReturn(List.of());
         
-        when(taskAgent.executeTask(any(Task.class), eq(userQuery), anyList())).thenReturn(completedTask);
+        when(taskExecutionService.executeTasksInParallel(anyList(), eq(userQuery), anyList())).thenReturn(List.of(completedTask));
+        when(planReviewService.updateTaskInList(anyList(), any(Task.class), eq(testGoalId)))
+            .thenAnswer(invocation -> {
+                List<Task> tasks = invocation.getArgument(0);
+                Task updatedTask = invocation.getArgument(1);
+                return tasks.stream()
+                    .map(t -> t.id().equals(updatedTask.id()) ? updatedTask : t)
+                    .toList();
+            });
+        when(planReviewService.handlePlanReview(anyList(), any(Task.class), eq(testGoalId)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
         when(goalAgent.summarizeGoalCompletion(any(Goal.class))).thenReturn(completedGoal);
         when(persistenceService.saveGoal(any(Goal.class))).thenReturn(completedGoal);
 
@@ -244,7 +288,7 @@ class WorkflowOrchestratorTest {
 
         // Then
         assertThat(result.success()).isTrue();
-        verify(dependencyResolver).hasCircularDependencies(anyList());
+        verify(taskPreparationService).prepareTasks(anyList());
     }
 
     @Test
