@@ -5,6 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 This is a Spring Boot application built with Java 24 that integrates Spring AI with OpenAI models to create an agentic workflow engine with dependency-aware parallel execution. The project uses Maven for build management and follows standard Spring Boot project structure.
 
+## Key Rules
+- Do not commit and push until I have reviewed and tested
+
 ## Core Architecture
 The system uses a pure orchestration pattern with service-based architecture:
 
