@@ -8,6 +8,61 @@ This is a Spring Boot application built with Java 24 that integrates Spring AI w
 ## Key Rules
 - Do not commit and push until I have reviewed and tested
 
+## Ways of Working
+
+### Feature Development Process
+1. **Ideation & Planning**
+   - Brainstorm ideas and discuss options
+   - Select one idea for development
+   - Create comprehensive PRD document (Product Requirements Document)
+   - Place PRD in `docs/proposals/in-review/` for evaluation
+
+2. **PRD Approval & Epic Creation**
+   - Review and approve PRD 
+   - Move PRD to `docs/proposals/in-progress/`
+   - Create GitHub Epic linked to the PRD
+   - Create feature branch from `develop` branch (naming: `feature/[epic-name]-[phase]`)
+
+3. **Implementation Planning**
+   - Break PRD into incremental deliverables as GitHub Issues/Stories
+   - Define clear acceptance criteria for each issue
+   - Link issues to Epic and PRD sections for traceability
+   - Implement phase-by-phase approach as defined in PRD
+
+4. **Development & Testing**
+   - Implement each issue/story incrementally
+   - Full testing and sign-off required for each story before moving to next
+   - Update PRD with phase completion status
+   - Maintain comprehensive test coverage
+
+5. **Epic Completion & Integration**
+   - Complete all issues in Epic with full testing
+   - Final Epic testing and sign-off
+   - Merge feature branch to `develop` branch
+   - Move completed PRD to `docs/proposals/completed/`
+
+6. **Production Deployment**
+   - Manual testing on `develop` branch
+   - Merge `develop` to `main` branch
+   - Deploy to GKE production environment
+
+### Definition of Done (Each Story)
+- [ ] Feature implemented according to acceptance criteria
+- [ ] Unit tests written and passing
+- [ ] Integration tests updated if needed
+- [ ] Code reviewed and approved
+- [ ] Documentation updated (CLAUDE.md, README.md)
+- [ ] Manual testing completed
+- [ ] No breaking changes to existing functionality
+
+### Definition of Done (Each Epic/PRD)
+- [ ] All phases and stories completed
+- [ ] Full end-to-end testing
+- [ ] Performance testing if applicable
+- [ ] Security review if applicable
+- [ ] Documentation comprehensive and up-to-date
+- [ ] Ready for production deployment
+
 ## Core Architecture
 The system uses a pure orchestration pattern with service-based architecture:
 
