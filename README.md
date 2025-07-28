@@ -125,6 +125,13 @@ graph TB
 - ✅ **Context-aware task execution** with completed task results
 - ✅ **Circular dependency detection** prevents infinite loops
 
+### 🎯 **Template System** (Phase 1 & 2)
+- ✅ **Pre-built workflow templates** - Start with expert-designed templates
+- ✅ **Rich parameter types** - STRING, NUMBER, SELECTION, DATE, CURRENCY, LOCATION
+- ✅ **Parameter validation** - Type-safe validation with helpful error messages
+- ✅ **Default values** - Optional parameters with sensible defaults
+- ✅ **Template discovery** - Browse and search available templates
+
 ### 🏗️ **Technical Excellence**
 - ✅ **PostgreSQL persistence** - Tasks persist immediately for real-time tracking
 - ✅ **Immutable domain records** following Java best practices
@@ -178,9 +185,111 @@ The application will start on `http://localhost:8080`
 
 ## API Usage
 
-The workflow engine provides an async API with instant response and real-time progress tracking.
+The workflow engine provides async APIs for both direct workflow execution and template-based workflows.
 
-### 1. Start Workflow Execution
+### Template System API
+
+#### 1. List Available Templates
+
+**Endpoint:** `GET /api/simple-templates`
+
+**Response:**
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Simple Trip Planner",
+    "description": "Plan a comprehensive trip with dates, budget, and style preferences",
+    "category": "Travel",
+    "author": "System",
+    "isPublic": true,
+    "createdAt": "2024-01-01T10:00:00Z"
+  }
+]
+```
+
+#### 2. Get Template Parameters
+
+**Endpoint:** `GET /api/simple-templates/{templateId}/parameters`
+
+**Response:**
+```json
+[
+  {
+    "name": "destination",
+    "description": "Where are you traveling to?",
+    "type": "LOCATION",
+    "required": true,
+    "defaultValue": null
+  },
+  {
+    "name": "startDate",
+    "description": "Departure date",
+    "type": "DATE",
+    "required": true,
+    "defaultValue": null
+  },
+  {
+    "name": "duration",
+    "description": "Number of days",
+    "type": "NUMBER",
+    "required": true,
+    "defaultValue": null
+  },
+  {
+    "name": "budget",
+    "description": "Total budget with currency",
+    "type": "CURRENCY",
+    "required": false,
+    "defaultValue": "1000 USD"
+  },
+  {
+    "name": "travelStyle",
+    "description": "Travel style preference",
+    "type": "SELECTION",
+    "required": false,
+    "defaultValue": "Mid-range"
+  }
+]
+```
+
+#### 3. Execute Template
+
+**Endpoint:** `POST /api/simple-templates/{templateId}/execute`
+
+**Request Body:**
+```json
+{
+  "destination": "Tokyo, Japan",
+  "startDate": "2024-12-15",
+  "duration": "10",
+  "budget": "3000 EUR",
+  "travelStyle": "Luxury"
+}
+```
+
+**Parameter Types:**
+- **STRING**: Any text value
+- **NUMBER**: Numeric values (integers or decimals)
+- **SELECTION**: Predefined choice from a list
+- **DATE**: Date in formats: `yyyy-MM-dd`, `MM/dd/yyyy`, or `dd/MM/yyyy`
+- **CURRENCY**: Amount and currency code (e.g., "1000 USD", "EUR 2500")
+- **LOCATION**: Geographic location (city, country, address)
+
+**Response:**
+```json
+{
+  "goalId": "123e4567-e89b-12d3-a456-426614174000",
+  "message": "Template executed successfully",
+  "success": true
+}
+```
+
+Use the returned `goalId` to track workflow progress using the standard workflow endpoints below.
+
+### Direct Workflow API
+
+#### 1. Start Workflow Execution
 
 **Endpoint:** `POST /api/workflow/execute`
 
@@ -205,7 +314,7 @@ The workflow executes asynchronously in virtual threads. Use the returned `goalI
 - **Goal Status**: High-level summary and completion status
 - **Task Details**: Individual task progress and results
 
-### 2. Check Goal Status
+#### 2. Check Goal Status
 
 **Endpoint:** `GET /api/workflow/goal/{goalId}`
 
@@ -221,7 +330,7 @@ The workflow executes asynchronously in virtual threads. Use the returned `goalI
 }
 ```
 
-### 3. Check Detailed Task Progress
+#### 3. Check Detailed Task Progress
 
 **Endpoint:** `GET /api/workflow/goal/{goalId}/tasks`
 
