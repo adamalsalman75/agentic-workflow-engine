@@ -13,4 +13,6 @@ public interface SimpleTemplateRepository extends CrudRepository<SimpleWorkflowT
     List<SimpleWorkflowTemplate> findByIsPublicTrue();
     
     List<SimpleWorkflowTemplate> findByCategory(String category);
+    
+    List<SimpleWorkflowTemplate> findByName(String name);
 }

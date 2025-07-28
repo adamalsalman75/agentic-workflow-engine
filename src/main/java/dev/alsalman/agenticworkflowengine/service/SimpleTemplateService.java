@@ -44,6 +44,16 @@ public class SimpleTemplateService {
         log.info("Initializing Phase 1 simple templates...");
         
         try {
+            // Check if template already exists
+            List<SimpleWorkflowTemplate> existingTemplates = repository.findByIsPublicTrue();
+            boolean tripPlannerExists = existingTemplates.stream()
+                .anyMatch(template -> "Simple Trip Planner".equals(template.name()));
+            
+            if (tripPlannerExists) {
+                log.info("Trip planning template already exists, skipping initialization");
+                return;
+            }
+            
             SimpleWorkflowTemplate tripTemplate = SimpleWorkflowTemplate.create(
                 "Simple Trip Planner",
                 "Plan a comprehensive trip with dates, budget, and style preferences",
