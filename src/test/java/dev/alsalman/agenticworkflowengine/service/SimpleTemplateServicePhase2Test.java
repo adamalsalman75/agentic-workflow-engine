@@ -107,7 +107,7 @@ class SimpleTemplateServicePhase2Test {
         // When/Then
         assertThatThrownBy(() -> templateService.executeTemplate(templateId, parameters))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("invalid currency code");
+            .hasMessageContaining("must include a valid currency code");
     }
     
     @Test
