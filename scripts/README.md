@@ -83,24 +83,28 @@ export ZONE="us-central1-a"
 ./scripts/kubernetes/deploy-to-gke.sh
 ```
 
-### `kubernetes/test-k8s-api.sh`
-Tests API endpoints against Kubernetes deployment.
+### `kubernetes/test-k8s-comprehensive.sh`
+Comprehensive Kubernetes testing that combines API testing with workflow monitoring.
 
 **Features:**
-- Auto-detects service endpoint or uses Ingress
-- Sets up port-forwarding if needed
-- Tests core functionality in K8s environment
+- Auto-detects service endpoint (LoadBalancer, Ingress, or port-forward)
+- Health check validation
+- Template system testing
+- Complete workflow execution with real-time monitoring
+- Template execution testing
+- Displays final results and task completion
+- Longer timeout for K8s latency
 
 **Usage:**
 ```bash
 # Test against default service
-./scripts/kubernetes/test-k8s-api.sh
+./scripts/kubernetes/test-k8s-comprehensive.sh
 
 # Test with custom configuration
 export NAMESPACE="production"
 export SERVICE_NAME="agentic-workflow-engine"
 export INGRESS_HOST="workflow.yourdomain.com"
-./scripts/kubernetes/test-k8s-api.sh
+./scripts/kubernetes/test-k8s-comprehensive.sh
 ```
 
 ### `kubernetes/check-status.sh`
@@ -109,14 +113,6 @@ Checks the overall health and status of the Kubernetes deployment.
 **Usage:**
 ```bash
 ./scripts/kubernetes/check-status.sh
-```
-
-### `kubernetes/monitor-workflow.sh`
-Real-time monitoring of a specific workflow execution in Kubernetes.
-
-**Usage:**
-```bash
-./scripts/kubernetes/monitor-workflow.sh <goal-id>
 ```
 
 ## Environment Variables
@@ -154,8 +150,8 @@ Real-time monitoring of a specific workflow execution in Kubernetes.
 # 1. Deploy to GKE
 ./scripts/kubernetes/deploy-to-gke.sh
 
-# 2. Test the deployment
-./scripts/kubernetes/test-k8s-api.sh
+# 2. Run comprehensive tests
+./scripts/kubernetes/test-k8s-comprehensive.sh
 ```
 
 ## Common Issues
