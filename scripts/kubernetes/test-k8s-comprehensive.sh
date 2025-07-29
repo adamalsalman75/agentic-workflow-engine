@@ -76,7 +76,7 @@ echo ""
 
 # Test template system
 echo "2. Testing template system:"
-TEMPLATES=$(curl -s --max-time 10 "${API_BASE}/api/simple-templates")
+TEMPLATES=$(curl -s --max-time 10 "${API_BASE}/api/templates")
 if [ $? -eq 0 ] && [ "$(echo $TEMPLATES | jq length)" -gt 0 ]; then
     echo "✅ Template system is working in Kubernetes"
     echo "Available templates: $(echo $TEMPLATES | jq -r '.[].name' | paste -sd, -)"
@@ -153,7 +153,7 @@ echo ""
 # Test template execution as well
 TEMPLATE_ID=$(echo $TEMPLATES | jq -r '.[0].id')
 echo "4. Testing template execution with ID: $TEMPLATE_ID"
-TEMPLATE_EXECUTION=$(curl -s --max-time 30 -X POST "${API_BASE}/api/simple-templates/${TEMPLATE_ID}/execute" \
+TEMPLATE_EXECUTION=$(curl -s --max-time 30 -X POST "${API_BASE}/api/templates/${TEMPLATE_ID}/execute" \
     -H "Content-Type: application/json" \
     -d '{
         "destination": "Tokyo, Japan",

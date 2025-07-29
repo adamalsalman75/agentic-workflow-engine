@@ -5,7 +5,7 @@ package dev.alsalman.agenticworkflowengine.template.domain;
  * Phase 1: STRING, NUMBER, SELECTION
  * Phase 2: DATE, CURRENCY, LOCATION
  */
-public enum SimpleParameterType {
+public enum ParameterType {
     STRING,
     NUMBER,
     SELECTION,

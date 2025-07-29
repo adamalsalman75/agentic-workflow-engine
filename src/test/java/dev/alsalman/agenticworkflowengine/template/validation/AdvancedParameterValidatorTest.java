@@ -29,8 +29,8 @@ class AdvancedParameterValidatorTest {
         void shouldValidateStringMatchingPattern() {
             // Given
             var rule = ValidationRule.pattern("^[A-Z]{3}$", "Must be 3 uppercase letters");
-            var parameter = SimpleParameter.requiredWithValidation(
-                "airportCode", "Airport code", SimpleParameterType.STRING, List.of(rule)
+            var parameter = Parameter.requiredWithValidation(
+                "airportCode", "Airport code", ParameterType.STRING, List.of(rule)
             );
             
             // Basic validation will pass for valid string
@@ -46,8 +46,8 @@ class AdvancedParameterValidatorTest {
         void shouldRejectStringNotMatchingPattern() {
             // Given
             var rule = ValidationRule.pattern("^[A-Z]{3}$", "Must be 3 uppercase letters");
-            var parameter = SimpleParameter.requiredWithValidation(
-                "airportCode", "Airport code", SimpleParameterType.STRING, List.of(rule)
+            var parameter = Parameter.requiredWithValidation(
+                "airportCode", "Airport code", ParameterType.STRING, List.of(rule)
             );
             
             // Basic validation will pass for valid string
@@ -63,8 +63,8 @@ class AdvancedParameterValidatorTest {
         void shouldUseDefaultMessageWhenCustomMessageNotProvided() {
             // Given
             var rule = ValidationRule.pattern("^[A-Z]{3}$", null);
-            var parameter = SimpleParameter.requiredWithValidation(
-                "code", "Code", SimpleParameterType.STRING, List.of(rule)
+            var parameter = Parameter.requiredWithValidation(
+                "code", "Code", ParameterType.STRING, List.of(rule)
             );
             
             // Basic validation will pass for valid string
@@ -89,8 +89,8 @@ class AdvancedParameterValidatorTest {
                 new BigDecimal("365"), 
                 "Duration must be between 1 and 365 days"
             );
-            var parameter = SimpleParameter.requiredWithValidation(
-                "duration", "Duration in days", SimpleParameterType.NUMBER, List.of(rule)
+            var parameter = Parameter.requiredWithValidation(
+                "duration", "Duration in days", ParameterType.NUMBER, List.of(rule)
             );
             
             // Basic validation will pass for valid number
@@ -110,8 +110,8 @@ class AdvancedParameterValidatorTest {
                 new BigDecimal("365"), 
                 "Duration must be between 1 and 365 days"
             );
-            var parameter = SimpleParameter.requiredWithValidation(
-                "duration", "Duration in days", SimpleParameterType.NUMBER, List.of(rule)
+            var parameter = Parameter.requiredWithValidation(
+                "duration", "Duration in days", ParameterType.NUMBER, List.of(rule)
             );
             
             // Basic validation will pass for valid number
@@ -131,8 +131,8 @@ class AdvancedParameterValidatorTest {
                 new BigDecimal("365"), 
                 null
             );
-            var parameter = SimpleParameter.requiredWithValidation(
-                "duration", "Duration in days", SimpleParameterType.NUMBER, List.of(rule)
+            var parameter = Parameter.requiredWithValidation(
+                "duration", "Duration in days", ParameterType.NUMBER, List.of(rule)
             );
             
             // Basic validation will pass for valid number
@@ -148,8 +148,8 @@ class AdvancedParameterValidatorTest {
         void shouldValidateWithOnlyMinimum() {
             // Given
             var rule = ValidationRule.range(new BigDecimal("0"), null, null);
-            var parameter = SimpleParameter.requiredWithValidation(
-                "age", "Age", SimpleParameterType.NUMBER, List.of(rule)
+            var parameter = Parameter.requiredWithValidation(
+                "age", "Age", ParameterType.NUMBER, List.of(rule)
             );
             
             // Basic validation will pass for valid number
@@ -174,8 +174,8 @@ class AdvancedParameterValidatorTest {
                 LocalDate.now().plusYears(1),
                 "Date must be within the next year"
             );
-            var parameter = SimpleParameter.requiredWithValidation(
-                "departureDate", "Departure date", SimpleParameterType.DATE, List.of(rule)
+            var parameter = Parameter.requiredWithValidation(
+                "departureDate", "Departure date", ParameterType.DATE, List.of(rule)
             );
             
             // Basic validation will pass
@@ -196,8 +196,8 @@ class AdvancedParameterValidatorTest {
                 null,
                 "Date cannot be in the past"
             );
-            var parameter = SimpleParameter.requiredWithValidation(
-                "eventDate", "Event date", SimpleParameterType.DATE, List.of(rule)
+            var parameter = Parameter.requiredWithValidation(
+                "eventDate", "Event date", ParameterType.DATE, List.of(rule)
             );
             
             // Basic validation will pass
@@ -218,8 +218,8 @@ class AdvancedParameterValidatorTest {
                 LocalDate.now().plusDays(30),
                 null
             );
-            var parameter = SimpleParameter.requiredWithValidation(
-                "deadline", "Deadline", SimpleParameterType.DATE, List.of(rule)
+            var parameter = Parameter.requiredWithValidation(
+                "deadline", "Deadline", ParameterType.DATE, List.of(rule)
             );
             
             // Basic validation will pass
@@ -244,8 +244,8 @@ class AdvancedParameterValidatorTest {
                 List.of("Economy", "Business", "First"),
                 "Invalid travel class"
             );
-            var parameter = SimpleParameter.requiredWithValidation(
-                "travelClass", "Travel class", SimpleParameterType.SELECTION, List.of(rule)
+            var parameter = Parameter.requiredWithValidation(
+                "travelClass", "Travel class", ParameterType.SELECTION, List.of(rule)
             );
             
             // Basic validation will pass
@@ -264,8 +264,8 @@ class AdvancedParameterValidatorTest {
                 List.of("Economy", "Business", "First"),
                 "Invalid travel class"
             );
-            var parameter = SimpleParameter.requiredWithValidation(
-                "travelClass", "Travel class", SimpleParameterType.SELECTION, List.of(rule)
+            var parameter = Parameter.requiredWithValidation(
+                "travelClass", "Travel class", ParameterType.SELECTION, List.of(rule)
             );
             
             // Basic validation will pass
@@ -284,8 +284,8 @@ class AdvancedParameterValidatorTest {
                 List.of("Low", "Medium", "High"),
                 null
             );
-            var parameter = SimpleParameter.requiredWithValidation(
-                "priority", "Priority", SimpleParameterType.SELECTION, List.of(rule)
+            var parameter = Parameter.requiredWithValidation(
+                "priority", "Priority", ParameterType.SELECTION, List.of(rule)
             );
             
             // Basic validation will pass
@@ -313,8 +313,8 @@ class AdvancedParameterValidatorTest {
                     "Must be between 1 and 999"
                 )
             );
-            var parameter = SimpleParameter.requiredWithValidation(
-                "code", "Numeric code", SimpleParameterType.STRING, rules
+            var parameter = Parameter.requiredWithValidation(
+                "code", "Numeric code", ParameterType.STRING, rules
             );
             
             // Basic validation will pass
@@ -333,8 +333,8 @@ class AdvancedParameterValidatorTest {
                 ValidationRule.pattern("^[A-Z]+$", "Must be uppercase"),
                 ValidationRule.pattern("^.{3}$", "Must be exactly 3 characters")
             );
-            var parameter = SimpleParameter.requiredWithValidation(
-                "code", "Code", SimpleParameterType.STRING, rules
+            var parameter = Parameter.requiredWithValidation(
+                "code", "Code", ParameterType.STRING, rules
             );
             
             // Basic validation will pass
@@ -357,7 +357,7 @@ class AdvancedParameterValidatorTest {
         @Test
         void shouldReturnBasicValidationErrorsWhenBasicValidationFails() {
             // Given
-            var parameter = SimpleParameter.required("name", "Name", SimpleParameterType.STRING);
+            var parameter = Parameter.required("name", "Name", ParameterType.STRING);
             
             // When passing null to a required parameter
             List<String> errors = validator.validateParameter(parameter, null);
@@ -370,8 +370,8 @@ class AdvancedParameterValidatorTest {
         void shouldSkipAdvancedValidationWhenBasicValidationFails() {
             // Given
             var rule = ValidationRule.pattern("^[A-Z]+$", "Must be uppercase");
-            var parameter = SimpleParameter.requiredWithValidation(
-                "code", "Code", SimpleParameterType.STRING, List.of(rule)
+            var parameter = Parameter.requiredWithValidation(
+                "code", "Code", ParameterType.STRING, List.of(rule)
             );
             
             // When passing null to a required parameter
@@ -390,7 +390,7 @@ class AdvancedParameterValidatorTest {
         @Test
         void shouldHandleEmptyValidationRulesList() {
             // Given
-            var parameter = SimpleParameter.required("field", "Field", SimpleParameterType.STRING);
+            var parameter = Parameter.required("field", "Field", ParameterType.STRING);
             
             // Basic validation will pass
             
@@ -405,8 +405,8 @@ class AdvancedParameterValidatorTest {
         void shouldSkipValidationForOptionalEmptyValues() {
             // Given
             var rule = ValidationRule.pattern("^[A-Z]+$", "Must be uppercase");
-            var parameter = SimpleParameter.optionalWithValidation(
-                "optionalCode", "Optional code", SimpleParameterType.STRING, null, List.of(rule)
+            var parameter = Parameter.optionalWithValidation(
+                "optionalCode", "Optional code", ParameterType.STRING, null, List.of(rule)
             );
             
             // Basic validation will pass
@@ -422,8 +422,8 @@ class AdvancedParameterValidatorTest {
         void shouldHandleInvalidRegexPattern() {
             // Given
             var rule = ValidationRule.pattern("[", "Invalid pattern");  // Invalid regex
-            var parameter = SimpleParameter.requiredWithValidation(
-                "field", "Field", SimpleParameterType.STRING, List.of(rule)
+            var parameter = Parameter.requiredWithValidation(
+                "field", "Field", ParameterType.STRING, List.of(rule)
             );
             
             // Basic validation will pass

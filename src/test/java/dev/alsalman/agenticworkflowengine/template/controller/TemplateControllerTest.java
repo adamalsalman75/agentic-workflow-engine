@@ -1,10 +1,10 @@
 package dev.alsalman.agenticworkflowengine.template.controller;
 
-import dev.alsalman.agenticworkflowengine.template.SimpleTemplateController;
-import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;
-import dev.alsalman.agenticworkflowengine.template.domain.SimpleParameter;
-import dev.alsalman.agenticworkflowengine.template.domain.SimpleParameterType;
-import dev.alsalman.agenticworkflowengine.template.domain.SimpleWorkflowTemplate;
+import dev.alsalman.agenticworkflowengine.template.TemplateController;
+import dev.alsalman.agenticworkflowengine.template.TemplateService;
+import dev.alsalman.agenticworkflowengine.template.domain.Parameter;
+import dev.alsalman.agenticworkflowengine.template.domain.ParameterType;
+import dev.alsalman.agenticworkflowengine.template.domain.WorkflowTemplate;
 import dev.alsalman.agenticworkflowengine.workflow.domain.Goal;
 import dev.alsalman.agenticworkflowengine.workflow.domain.GoalStatus;
 import dev.alsalman.agenticworkflowengine.workflow.domain.WorkflowResult;
@@ -28,22 +28,22 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class SimpleTemplateControllerTest {
+class TemplateControllerTest {
 
     @Mock
-    private SimpleTemplateService templateService;
+    private TemplateService templateService;
 
     @InjectMocks
-    private SimpleTemplateController controller;
+    private TemplateController controller;
 
     private UUID templateId;
-    private SimpleWorkflowTemplate template;
-    private List<SimpleParameter> parameters;
+    private WorkflowTemplate template;
+    private List<Parameter> parameters;
 
     @BeforeEach
     void setUp() {
         templateId = UUID.randomUUID();
-        template = SimpleWorkflowTemplate.create(
+        template = WorkflowTemplate.create(
             "Test Template",
             "Test description",
             "Test category",
@@ -52,19 +52,19 @@ class SimpleTemplateControllerTest {
         );
         
         parameters = List.of(
-            SimpleParameter.required("param1", "Test parameter", SimpleParameterType.STRING),
-            SimpleParameter.optional("param2", "Optional parameter", SimpleParameterType.NUMBER, "10")
+            Parameter.required("param1", "Test parameter", ParameterType.STRING),
+            Parameter.optional("param2", "Optional parameter", ParameterType.NUMBER, "10")
         );
     }
 
     @Test
     void listTemplates_ShouldReturnAllTemplates() {
         // Given
-        List<SimpleWorkflowTemplate> templates = List.of(template);
+        List<WorkflowTemplate> templates = List.of(template);
         when(templateService.getAllTemplates()).thenReturn(templates);
 
         // When
-        ResponseEntity<List<SimpleWorkflowTemplate>> response = controller.listTemplates();
+        ResponseEntity<List<WorkflowTemplate>> response = controller.listTemplates();
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -78,7 +78,7 @@ class SimpleTemplateControllerTest {
         when(templateService.getTemplate(templateId)).thenReturn(template);
 
         // When
-        ResponseEntity<SimpleWorkflowTemplate> response = controller.getTemplate(templateId);
+        ResponseEntity<WorkflowTemplate> response = controller.getTemplate(templateId);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -92,7 +92,7 @@ class SimpleTemplateControllerTest {
         when(templateService.getTemplate(templateId)).thenThrow(new IllegalArgumentException("Template not found"));
 
         // When
-        ResponseEntity<SimpleWorkflowTemplate> response = controller.getTemplate(templateId);
+        ResponseEntity<WorkflowTemplate> response = controller.getTemplate(templateId);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -105,7 +105,7 @@ class SimpleTemplateControllerTest {
         when(templateService.getTemplateParameters(templateId)).thenReturn(parameters);
 
         // When
-        ResponseEntity<List<SimpleParameter>> response = controller.getTemplateParameters(templateId);
+        ResponseEntity<List<Parameter>> response = controller.getTemplateParameters(templateId);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -120,7 +120,7 @@ class SimpleTemplateControllerTest {
         when(templateService.getTemplateParameters(templateId)).thenThrow(new IllegalArgumentException("Template not found"));
 
         // When
-        ResponseEntity<List<SimpleParameter>> response = controller.getTemplateParameters(templateId);
+        ResponseEntity<List<Parameter>> response = controller.getTemplateParameters(templateId);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -138,7 +138,7 @@ class SimpleTemplateControllerTest {
         when(templateService.executeTemplate(eq(templateId), any())).thenReturn(result);
 
         // When
-        ResponseEntity<SimpleTemplateController.ExecuteResponse> response = 
+        ResponseEntity<TemplateController.ExecuteResponse> response = 
             controller.executeTemplate(templateId, requestParams);
 
         // Then
@@ -160,7 +160,7 @@ class SimpleTemplateControllerTest {
         when(templateService.executeTemplate(eq(templateId), any())).thenReturn(result);
 
         // When
-        ResponseEntity<SimpleTemplateController.ExecuteResponse> response = 
+        ResponseEntity<TemplateController.ExecuteResponse> response = 
             controller.executeTemplate(templateId, requestParams);
 
         // Then
@@ -179,7 +179,7 @@ class SimpleTemplateControllerTest {
             .thenThrow(new IllegalArgumentException("Parameter validation failed: Invalid value"));
 
         // When
-        ResponseEntity<SimpleTemplateController.ExecuteResponse> response = 
+        ResponseEntity<TemplateController.ExecuteResponse> response = 
             controller.executeTemplate(templateId, requestParams);
 
         // Then
@@ -198,7 +198,7 @@ class SimpleTemplateControllerTest {
             .thenThrow(new RuntimeException("Unexpected error"));
 
         // When
-        ResponseEntity<SimpleTemplateController.ExecuteResponse> response = 
+        ResponseEntity<TemplateController.ExecuteResponse> response = 
             controller.executeTemplate(templateId, requestParams);
 
         // Then

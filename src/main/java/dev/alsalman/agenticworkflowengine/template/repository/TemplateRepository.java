@@ -1,0 +1,18 @@
+package dev.alsalman.agenticworkflowengine.template.repository;
+
+import dev.alsalman.agenticworkflowengine.template.domain.WorkflowTemplate;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface TemplateRepository extends CrudRepository<WorkflowTemplate, UUID> {
+    
+    List<WorkflowTemplate> findByIsPublicTrue();
+    
+    List<WorkflowTemplate> findByCategory(String category);
+    
+    List<WorkflowTemplate> findByName(String name);
+}

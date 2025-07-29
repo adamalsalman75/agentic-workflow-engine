@@ -7,11 +7,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Phase 1: Simplified template without complex data types
- * No Map, List, or complex relationships - just basic fields
+ * Workflow template with advanced validation and parameter support
  */
-@Table("simple_templates")
-public record SimpleWorkflowTemplate(
+@Table("templates")
+public record WorkflowTemplate(
     @Id
     UUID id,
     String name,
@@ -23,14 +22,14 @@ public record SimpleWorkflowTemplate(
     Instant createdAt
 ) {
     
-    public static SimpleWorkflowTemplate create(
+    public static WorkflowTemplate create(
         String name,
         String description,
         String category,
         String promptTemplate,
         String author
     ) {
-        return new SimpleWorkflowTemplate(
+        return new WorkflowTemplate(
             null, // Let database generate ID
             name,
             description,

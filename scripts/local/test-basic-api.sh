@@ -80,7 +80,7 @@ echo ""
 
 # Test template system
 echo "3. Testing template system:"
-TEMPLATES=$(curl -s "${API_BASE}/api/simple-templates")
+TEMPLATES=$(curl -s "${API_BASE}/api/templates")
 if [ $? -eq 0 ] && [ "$(echo $TEMPLATES | jq length)" -gt 0 ]; then
     echo "✅ Template system is working"
     echo "Available templates: $(echo $TEMPLATES | jq -r '.[].name' | paste -sd, -)"
@@ -89,7 +89,7 @@ if [ $? -eq 0 ] && [ "$(echo $TEMPLATES | jq length)" -gt 0 ]; then
     TEMPLATE_ID=$(echo $TEMPLATES | jq -r '.[0].id')
     echo ""
     echo "4. Quick Story 2 validation test:"
-    VALIDATION_TEST=$(curl -s -X POST "${API_BASE}/api/simple-templates/${TEMPLATE_ID}/execute" \
+    VALIDATION_TEST=$(curl -s -X POST "${API_BASE}/api/templates/${TEMPLATE_ID}/execute" \
         -H "Content-Type: application/json" \
         -d '{
             "destination": "Test City",

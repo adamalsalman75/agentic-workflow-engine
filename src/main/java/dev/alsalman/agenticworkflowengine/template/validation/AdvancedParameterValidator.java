@@ -1,7 +1,7 @@
 package dev.alsalman.agenticworkflowengine.template.validation;
 
-import dev.alsalman.agenticworkflowengine.template.domain.SimpleParameter;
-import dev.alsalman.agenticworkflowengine.template.domain.SimpleParameterType;
+import dev.alsalman.agenticworkflowengine.template.domain.Parameter;
+import dev.alsalman.agenticworkflowengine.template.domain.ParameterType;
 import dev.alsalman.agenticworkflowengine.template.domain.ValidationRule;
 import dev.alsalman.agenticworkflowengine.template.domain.ValidationRule.ValidationRuleType;
 import org.springframework.stereotype.Component;
@@ -35,7 +35,7 @@ public class AdvancedParameterValidator {
      * Validates a parameter value against all its validation rules
      * @return List of error messages (empty if valid)
      */
-    public List<String> validateParameter(SimpleParameter parameter, String value) {
+    public List<String> validateParameter(Parameter parameter, String value) {
         List<String> errors = new ArrayList<>();
         
         // First perform basic validation
@@ -61,7 +61,7 @@ public class AdvancedParameterValidator {
         return errors;
     }
     
-    private String validateRule(SimpleParameter parameter, String value, ValidationRule rule) {
+    private String validateRule(Parameter parameter, String value, ValidationRule rule) {
         return switch (rule.type()) {
             case REQUIRED -> validateRequired(value, rule);
             case PATTERN -> validatePattern(value, rule);
@@ -97,8 +97,8 @@ public class AdvancedParameterValidator {
         return null;
     }
     
-    private String validateRange(SimpleParameter parameter, String value, ValidationRule rule) {
-        if (parameter.type() != SimpleParameterType.NUMBER) {
+    private String validateRange(Parameter parameter, String value, ValidationRule rule) {
+        if (parameter.type() != ParameterType.NUMBER) {
             return null; // Range validation only applies to NUMBER types
         }
         
@@ -124,8 +124,8 @@ public class AdvancedParameterValidator {
         return null;
     }
     
-    private String validateDateRange(SimpleParameter parameter, String value, ValidationRule rule) {
-        if (parameter.type() != SimpleParameterType.DATE) {
+    private String validateDateRange(Parameter parameter, String value, ValidationRule rule) {
+        if (parameter.type() != ParameterType.DATE) {
             return null; // Date range validation only applies to DATE types
         }
         
