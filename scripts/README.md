@@ -47,13 +47,6 @@ Comprehensive testing of the Template System Phase 2 features including:
 ./scripts/local/test-phase2-api.sh
 ```
 
-### `local/test-workflow.sh`
-Tests the core workflow engine functionality.
-
-**Usage:**
-```bash
-./scripts/local/test-workflow.sh
-```
 
 
 ## Kubernetes Scripts
