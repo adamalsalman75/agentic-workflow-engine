@@ -76,7 +76,12 @@ This is a Spring Boot application built with Java 24 that integrates Spring AI w
 - [ ] No breaking changes to existing functionality
 - [ ] PR created and reviewed
 - [ ] PR merged to `develop` branch
-- [ ] Story closed with summary comment
+- [ ] Story closed on GitHub with detailed completion comment including:
+  - Summary of implemented features
+  - How each acceptance criterion was met
+  - Technical changes made (files, classes, endpoints)
+  - Test coverage added
+  - Any architectural decisions or trade-offs
 - [ ] Documentation updated (CLAUDE.md, README.md) if needed
 
 ### Definition of Done (Each Epic/PRD)

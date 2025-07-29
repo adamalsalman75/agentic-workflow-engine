@@ -32,12 +32,14 @@ public class TemplateService {
     
     // Hardcoded templates for Phase 1 & 2 with validation rules
     private final List<Parameter> TRIP_PARAMETERS = Arrays.asList(
-        Parameter.required("destination", "Where are you traveling to?", ParameterType.LOCATION),
+        Parameter.requiredWithValidation("destination", "Where are you traveling to?", ParameterType.LOCATION,
+            List.of(ValidationRule.pattern("^[A-Za-z\\s,.-]+$", "Please enter a valid location (letters, spaces, commas, periods, and hyphens only)"))),
         Parameter.requiredWithValidation("startDate", "Departure date", ParameterType.DATE, 
             List.of(ValidationRule.dateRange(LocalDate.now(), null, "Departure date cannot be in the past"))),
         Parameter.requiredWithValidation("duration", "Number of days", ParameterType.NUMBER,
             List.of(ValidationRule.range(new BigDecimal("1"), new BigDecimal("365"), "Duration must be between 1 and 365 days"))),
-        Parameter.optional("budget", "Total budget with currency", ParameterType.CURRENCY, "1000 USD"),
+        Parameter.optionalWithValidation("budget", "Total budget with currency", ParameterType.CURRENCY, "1000 USD",
+            List.of(ValidationRule.pattern("^\\d+\\s*(USD|EUR|GBP|JPY|CAD|AUD)$", "Budget must be in format: amount + currency code (e.g., 1000 USD)"))),
         Parameter.optionalWithValidation("travelStyle", "Travel style preference", ParameterType.SELECTION, "Mid-range",
             List.of(ValidationRule.allowedValues(List.of("Budget", "Mid-range", "Luxury"), "Travel style must be Budget, Mid-range, or Luxury")))
     );
