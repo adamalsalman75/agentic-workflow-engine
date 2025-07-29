@@ -1,28 +1,28 @@
-package dev.alsalman.agenticworkflowengine.service;
+package dev.alsalman.agenticworkflowengine.workflow.service;
 
-import dev.alsalman.agenticworkflowengine.agent.GoalAgent;
-import dev.alsalman.agenticworkflowengine.domain.Goal;
-import dev.alsalman.agenticworkflowengine.domain.GoalStatus;
-import dev.alsalman.agenticworkflowengine.domain.Task;
-import dev.alsalman.agenticworkflowengine.domain.TaskStatus;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-@ExtendWith(MockitoExtension.class)
+import dev.alsalman.agenticworkflowengine.execution.GoalAgent;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;import dev.alsalman.agenticworkflowengine.workflow.domain.Goal;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;import dev.alsalman.agenticworkflowengine.workflow.domain.GoalStatus;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;import dev.alsalman.agenticworkflowengine.workflow.domain.Task;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;import dev.alsalman.agenticworkflowengine.workflow.domain.TaskStatus;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;import org.junit.jupiter.api.BeforeEach;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;import org.junit.jupiter.api.Test;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;import org.junit.jupiter.api.extension.ExtendWith;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;import org.mockito.InjectMocks;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;import org.mockito.Mock;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;import org.mockito.junit.jupiter.MockitoExtension;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import java.time.Instant;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;import java.util.List;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;import java.util.UUID;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import static org.assertj.core.api.Assertions.assertThat;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;import static org.mockito.ArgumentMatchers.any;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;import static org.mockito.ArgumentMatchers.eq;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;import static org.mockito.Mockito.verify;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;import static org.mockito.Mockito.when;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;import dev.alsalman.agenticworkflowengine.workflow.service.GoalService;
+import dev.alsalman.agenticworkflowengine.workflow.service.WorkflowSummaryService;@ExtendWith(MockitoExtension.class)
 class WorkflowSummaryServiceTest {
 
     @Mock

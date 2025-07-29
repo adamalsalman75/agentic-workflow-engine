@@ -1,16 +1,16 @@
-package dev.alsalman.agenticworkflowengine.service;
+package dev.alsalman.agenticworkflowengine.planning.service;
 
-import dev.alsalman.agenticworkflowengine.domain.Task;
-import dev.alsalman.agenticworkflowengine.domain.TaskStatus;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
+import dev.alsalman.agenticworkflowengine.workflow.domain.Task;
+import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;import dev.alsalman.agenticworkflowengine.workflow.domain.TaskStatus;
+import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;import org.junit.jupiter.api.BeforeEach;
+import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;import org.junit.jupiter.api.Test;
+import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;
 import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
+import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;import java.util.List;
+import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;import java.util.UUID;
+import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;
 import static org.assertj.core.api.Assertions.assertThat;
-
+import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;
 class DependencyResolverTest {
 
     private DependencyResolver dependencyResolver;

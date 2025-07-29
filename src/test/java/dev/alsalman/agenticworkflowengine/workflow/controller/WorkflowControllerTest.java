@@ -1,13 +1,14 @@
-package dev.alsalman.agenticworkflowengine.controller;
+package dev.alsalman.agenticworkflowengine.workflow.controller;
 
-import dev.alsalman.agenticworkflowengine.domain.ExecutionResponse;
-import dev.alsalman.agenticworkflowengine.domain.Goal;
-import dev.alsalman.agenticworkflowengine.domain.GoalStatus;
-import dev.alsalman.agenticworkflowengine.domain.GoalSummary;
-import dev.alsalman.agenticworkflowengine.domain.Task;
-import dev.alsalman.agenticworkflowengine.domain.TaskStatus;
-import dev.alsalman.agenticworkflowengine.service.WorkflowOrchestrator;
-import dev.alsalman.agenticworkflowengine.service.WorkflowPersistenceService;
+import dev.alsalman.agenticworkflowengine.template.domain.ExecutionResponse;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowController;
+import dev.alsalman.agenticworkflowengine.workflow.domain.Goal;
+import dev.alsalman.agenticworkflowengine.workflow.domain.GoalStatus;
+import dev.alsalman.agenticworkflowengine.workflow.domain.GoalSummary;
+import dev.alsalman.agenticworkflowengine.workflow.domain.Task;
+import dev.alsalman.agenticworkflowengine.workflow.domain.TaskStatus;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;
+import dev.alsalman.agenticworkflowengine.infrastructure.WorkflowPersistenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

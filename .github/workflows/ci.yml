@@ -47,8 +47,8 @@ jobs:
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-m2
 
-    - name: Run tests
-      run: ./mvnw clean test
+    - name: Run tests with coverage
+      run: ./mvnw clean test jacoco:report
       env:
         DATABASE_URL: jdbc:postgresql://localhost:5432/agentic_workflow
         DATABASE_USERNAME: postgres
@@ -64,12 +64,21 @@ jobs:
         path: target/surefire-reports/*.xml
         reporter: java-junit
 
-    - name: Upload coverage reports
+    - name: Upload coverage to Codecov
       if: success()
       uses: codecov/codecov-action@v4
       with:
         file: target/site/jacoco/jacoco.xml
         fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}
+
+    - name: Coverage Badge
+      if: success()
+      uses: codecov/codecov-action@v4
+      with:
+        file: target/site/jacoco/jacoco.xml
+        flags: unittests
+        name: codecov-umbrella
 
   build:
     needs: test

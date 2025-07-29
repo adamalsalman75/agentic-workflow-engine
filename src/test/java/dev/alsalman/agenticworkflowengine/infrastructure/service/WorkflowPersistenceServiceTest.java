@@ -1,12 +1,13 @@
-package dev.alsalman.agenticworkflowengine.service;
+package dev.alsalman.agenticworkflowengine.infrastructure.service;
 
-import dev.alsalman.agenticworkflowengine.domain.Goal;
-import dev.alsalman.agenticworkflowengine.domain.GoalStatus;
-import dev.alsalman.agenticworkflowengine.domain.Task;
-import dev.alsalman.agenticworkflowengine.domain.TaskStatus;
-import dev.alsalman.agenticworkflowengine.repository.GoalRepository;
-import dev.alsalman.agenticworkflowengine.repository.TaskDependencyRepository;
-import dev.alsalman.agenticworkflowengine.repository.TaskRepository;
+import dev.alsalman.agenticworkflowengine.infrastructure.WorkflowPersistenceService;
+import dev.alsalman.agenticworkflowengine.workflow.domain.Goal;
+import dev.alsalman.agenticworkflowengine.workflow.domain.GoalStatus;
+import dev.alsalman.agenticworkflowengine.workflow.domain.Task;
+import dev.alsalman.agenticworkflowengine.workflow.domain.TaskStatus;
+import dev.alsalman.agenticworkflowengine.workflow.repository.GoalRepository;
+import dev.alsalman.agenticworkflowengine.workflow.repository.TaskDependencyRepository;
+import dev.alsalman.agenticworkflowengine.workflow.repository.TaskRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

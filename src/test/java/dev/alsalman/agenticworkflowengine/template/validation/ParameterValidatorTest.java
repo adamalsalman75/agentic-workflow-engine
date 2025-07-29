@@ -1,7 +1,7 @@
-package dev.alsalman.agenticworkflowengine.validation;
+package dev.alsalman.agenticworkflowengine.template.validation;
 
-import dev.alsalman.agenticworkflowengine.domain.SimpleParameter;
-import dev.alsalman.agenticworkflowengine.domain.SimpleParameterType;
+import dev.alsalman.agenticworkflowengine.template.domain.SimpleParameter;
+import dev.alsalman.agenticworkflowengine.template.domain.SimpleParameterType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;

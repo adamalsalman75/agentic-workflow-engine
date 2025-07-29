@@ -1,8 +1,11 @@
-package dev.alsalman.agenticworkflowengine.service;
+package dev.alsalman.agenticworkflowengine.execution.service;
 
-import dev.alsalman.agenticworkflowengine.domain.Task;
-import dev.alsalman.agenticworkflowengine.domain.TaskPlan;
-import dev.alsalman.agenticworkflowengine.domain.TaskStatus;
+import dev.alsalman.agenticworkflowengine.workflow.domain.Task;
+import dev.alsalman.agenticworkflowengine.planning.domain.TaskPlan;
+import dev.alsalman.agenticworkflowengine.workflow.domain.TaskStatus;
+import dev.alsalman.agenticworkflowengine.execution.TaskDependencyResolver;
+import dev.alsalman.agenticworkflowengine.infrastructure.WorkflowPersistenceService;
+import dev.alsalman.agenticworkflowengine.execution.TaskPersistenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

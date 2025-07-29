@@ -1,25 +1,25 @@
-package dev.alsalman.agenticworkflowengine.service;
+package dev.alsalman.agenticworkflowengine.execution.service;
 
-import dev.alsalman.agenticworkflowengine.domain.Task;
-import dev.alsalman.agenticworkflowengine.domain.TaskDependency;
-import dev.alsalman.agenticworkflowengine.domain.TaskStatus;
-import dev.alsalman.agenticworkflowengine.domain.DependencyType;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.when;
-
-@ExtendWith(MockitoExtension.class)
+import dev.alsalman.agenticworkflowengine.workflow.domain.Task;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;import dev.alsalman.agenticworkflowengine.workflow.domain.TaskDependency;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;import dev.alsalman.agenticworkflowengine.workflow.domain.TaskStatus;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;import dev.alsalman.agenticworkflowengine.workflow.domain.DependencyType;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;import org.junit.jupiter.api.BeforeEach;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;import org.junit.jupiter.api.Test;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;import org.junit.jupiter.api.extension.ExtendWith;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;import org.mockito.InjectMocks;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;import org.mockito.Mock;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;import org.mockito.junit.jupiter.MockitoExtension;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;import java.time.Instant;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;import java.util.List;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;import java.util.UUID;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;import static org.assertj.core.api.Assertions.assertThat;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;import static org.mockito.ArgumentMatchers.anyList;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;import static org.mockito.Mockito.when;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;import dev.alsalman.agenticworkflowengine.planning.DependencyResolver;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;@ExtendWith(MockitoExtension.class)
 class TaskPreparationServiceTest {
 
     @Mock

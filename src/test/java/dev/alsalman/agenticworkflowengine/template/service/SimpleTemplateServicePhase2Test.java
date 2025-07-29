@@ -1,31 +1,31 @@
-package dev.alsalman.agenticworkflowengine.service;
+package dev.alsalman.agenticworkflowengine.template.service;
 
-import dev.alsalman.agenticworkflowengine.domain.Goal;
-import dev.alsalman.agenticworkflowengine.domain.GoalStatus;
-import dev.alsalman.agenticworkflowengine.domain.SimpleParameter;
-import dev.alsalman.agenticworkflowengine.domain.SimpleWorkflowTemplate;
-import dev.alsalman.agenticworkflowengine.domain.WorkflowResult;
-import dev.alsalman.agenticworkflowengine.repository.SimpleTemplateRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-
-@ExtendWith(MockitoExtension.class)
+import dev.alsalman.agenticworkflowengine.workflow.domain.Goal;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import dev.alsalman.agenticworkflowengine.workflow.domain.GoalStatus;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import dev.alsalman.agenticworkflowengine.template.domain.SimpleParameter;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import dev.alsalman.agenticworkflowengine.template.domain.SimpleWorkflowTemplate;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import dev.alsalman.agenticworkflowengine.workflow.domain.WorkflowResult;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import dev.alsalman.agenticworkflowengine.template.repository.SimpleTemplateRepository;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import org.junit.jupiter.api.BeforeEach;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import org.junit.jupiter.api.Test;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import org.junit.jupiter.api.extension.ExtendWith;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import org.mockito.InjectMocks;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import org.mockito.Mock;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import org.mockito.junit.jupiter.MockitoExtension;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import java.time.Instant;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import java.util.HashMap;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import java.util.List;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import java.util.Map;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import java.util.Optional;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import java.util.UUID;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import static org.assertj.core.api.Assertions.assertThat;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import static org.mockito.ArgumentMatchers.any;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;import static org.mockito.Mockito.when;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;@ExtendWith(MockitoExtension.class)
 class SimpleTemplateServicePhase2Test {
     
     @Mock

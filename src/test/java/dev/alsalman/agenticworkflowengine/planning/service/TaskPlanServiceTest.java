@@ -1,24 +1,24 @@
-package dev.alsalman.agenticworkflowengine.service;
+package dev.alsalman.agenticworkflowengine.planning.service;
 
-import dev.alsalman.agenticworkflowengine.agent.TaskPlanAgent;
-import dev.alsalman.agenticworkflowengine.domain.Task;
-import dev.alsalman.agenticworkflowengine.domain.TaskPlan;
-import dev.alsalman.agenticworkflowengine.domain.TaskStatus;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
+import dev.alsalman.agenticworkflowengine.planning.TaskPlanAgent;
+import dev.alsalman.agenticworkflowengine.planning.TaskPlanService;import dev.alsalman.agenticworkflowengine.workflow.domain.Task;
+import dev.alsalman.agenticworkflowengine.planning.TaskPlanService;import dev.alsalman.agenticworkflowengine.planning.domain.TaskPlan;
+import dev.alsalman.agenticworkflowengine.planning.TaskPlanService;import dev.alsalman.agenticworkflowengine.workflow.domain.TaskStatus;
+import dev.alsalman.agenticworkflowengine.planning.TaskPlanService;import org.junit.jupiter.api.BeforeEach;
+import dev.alsalman.agenticworkflowengine.planning.TaskPlanService;import org.junit.jupiter.api.Test;
+import dev.alsalman.agenticworkflowengine.planning.TaskPlanService;import org.junit.jupiter.api.extension.ExtendWith;
+import dev.alsalman.agenticworkflowengine.planning.TaskPlanService;import org.mockito.InjectMocks;
+import dev.alsalman.agenticworkflowengine.planning.TaskPlanService;import org.mockito.Mock;
+import dev.alsalman.agenticworkflowengine.planning.TaskPlanService;import org.mockito.junit.jupiter.MockitoExtension;
+import dev.alsalman.agenticworkflowengine.planning.TaskPlanService;
 import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
+import dev.alsalman.agenticworkflowengine.planning.TaskPlanService;import java.util.List;
+import dev.alsalman.agenticworkflowengine.planning.TaskPlanService;import java.util.UUID;
+import dev.alsalman.agenticworkflowengine.planning.TaskPlanService;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
+import dev.alsalman.agenticworkflowengine.planning.TaskPlanService;import static org.mockito.Mockito.verify;
+import dev.alsalman.agenticworkflowengine.planning.TaskPlanService;import static org.mockito.Mockito.when;
+import dev.alsalman.agenticworkflowengine.planning.TaskPlanService;
 @ExtendWith(MockitoExtension.class)
 class TaskPlanServiceTest {
 

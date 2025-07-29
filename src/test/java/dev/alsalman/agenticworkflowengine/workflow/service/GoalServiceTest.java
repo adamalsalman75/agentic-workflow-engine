@@ -1,7 +1,8 @@
-package dev.alsalman.agenticworkflowengine.service;
+package dev.alsalman.agenticworkflowengine.workflow.service;
 
-import dev.alsalman.agenticworkflowengine.domain.Goal;
-import dev.alsalman.agenticworkflowengine.domain.GoalStatus;
+import dev.alsalman.agenticworkflowengine.infrastructure.WorkflowPersistenceService;
+import dev.alsalman.agenticworkflowengine.workflow.domain.Goal;
+import dev.alsalman.agenticworkflowengine.workflow.domain.GoalStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

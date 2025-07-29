@@ -1,13 +1,19 @@
-package dev.alsalman.agenticworkflowengine.service;
+package dev.alsalman.agenticworkflowengine.workflow.service;
 
-import dev.alsalman.agenticworkflowengine.agent.GoalAgent;
-import dev.alsalman.agenticworkflowengine.agent.TaskPlanAgent;
-import dev.alsalman.agenticworkflowengine.domain.Goal;
-import dev.alsalman.agenticworkflowengine.domain.GoalStatus;
-import dev.alsalman.agenticworkflowengine.domain.Task;
-import dev.alsalman.agenticworkflowengine.domain.TaskPlan;
-import dev.alsalman.agenticworkflowengine.domain.TaskStatus;
-import dev.alsalman.agenticworkflowengine.domain.WorkflowResult;
+import dev.alsalman.agenticworkflowengine.execution.GoalAgent;
+import dev.alsalman.agenticworkflowengine.execution.TaskDependencyResolver;
+import dev.alsalman.agenticworkflowengine.execution.TaskPersistenceService;
+import dev.alsalman.agenticworkflowengine.execution.TaskPreparationService;
+import dev.alsalman.agenticworkflowengine.infrastructure.WorkflowPersistenceService;
+import dev.alsalman.agenticworkflowengine.planning.domain.TaskPlan;
+import dev.alsalman.agenticworkflowengine.planning.PlanReviewService;
+import dev.alsalman.agenticworkflowengine.planning.TaskPlanService;
+import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;
+import dev.alsalman.agenticworkflowengine.workflow.domain.Goal;
+import dev.alsalman.agenticworkflowengine.workflow.domain.GoalStatus;
+import dev.alsalman.agenticworkflowengine.workflow.domain.Task;
+import dev.alsalman.agenticworkflowengine.workflow.domain.TaskStatus;
+import dev.alsalman.agenticworkflowengine.workflow.domain.WorkflowResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,7 +46,6 @@ class WorkflowOrchestratorTest {
 
     @Mock
     private GoalAgent goalAgent;
-
 
     @Mock
     private WorkflowPersistenceService persistenceService;

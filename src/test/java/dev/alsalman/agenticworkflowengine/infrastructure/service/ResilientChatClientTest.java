@@ -1,12 +1,12 @@
-package dev.alsalman.agenticworkflowengine.service;
+package dev.alsalman.agenticworkflowengine.infrastructure.service;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.client.HttpClientErrorException;
-
+import dev.alsalman.agenticworkflowengine.infrastructure.ResilientChatClient;import org.springframework.http.HttpStatus;
+import dev.alsalman.agenticworkflowengine.infrastructure.ResilientChatClient;import org.springframework.web.client.HttpClientErrorException;
+import dev.alsalman.agenticworkflowengine.infrastructure.ResilientChatClient;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
+import dev.alsalman.agenticworkflowengine.infrastructure.ResilientChatClient;import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import dev.alsalman.agenticworkflowengine.infrastructure.ResilientChatClient;
 class ResilientChatClientTest {
 
     // Test the error detection logic which is the main functionality we want to ensure works
