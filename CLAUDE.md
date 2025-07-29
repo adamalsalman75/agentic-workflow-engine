@@ -5,8 +5,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 This is a Spring Boot application built with Java 24 that integrates Spring AI with OpenAI models to create an agentic workflow engine with dependency-aware parallel execution. The project uses Maven for build management and follows standard Spring Boot project structure.
 
-## Key Rules
-- Do not commit and push until I have reviewed and tested
+## Key Git Rules
+
+### Branch Permissions
+- **develop branch**: Claude must ask permission before pushing
+- **main branch**: Claude must NEVER push directly
+- **feature branches**: Claude may commit and push freely
+
+### Commit Guidelines
+- Feature branches should reference GitHub issue: `feature/story-{number}-{description}`
+  - Example: `feature/story-5-advanced-validation`
+  - Example: `feature/story-12-chat-interface`
+- Commits should be atomic and well-described
+- Use conventional commit format (feat:, fix:, docs:, chore:, test:)
 
 ## Ways of Working
 
@@ -220,10 +231,59 @@ The project follows enterprise testing practices with comprehensive coverage:
 - Spring AI OpenAI integration requires appropriate API keys and configuration
 - The application name is set to "agentic-workflow-engine"
 
-## Java Principals
-- Use immutable records
-- Use RestClient over RestTemplate
-- Use Spring Data JDBC 
-- Use postgres
-- Use virtual threads
-- Use Structured Task Scope for asynchronous code over reactive.
+## Java Principles
+
+### Core Design Principles
+- **Immutable Records**: Use Java records for all domain models to ensure thread safety and immutability
+  ```java
+  public record Task(UUID id, String description, String status) {}
+  ```
+- **Constructor-based Dependency Injection**: Prefer constructor injection over field injection
+  ```java
+  public SimpleTemplateService(SimpleTemplateRepository repository) {
+      this.repository = repository;
+  }
+  ```
+- **Service Layer Pattern**: Encapsulate business logic in service classes, keep controllers thin
+- **Repository Pattern**: Use Spring Data JDBC repositories for data access
+
+### Technology Choices
+- **RestClient over RestTemplate**: Use the modern RestClient for HTTP calls
+- **Spring Data JDBC over JPA**: Simpler, more predictable than JPA for our use cases
+- **PostgreSQL Database**: 
+  - Use UUID primary keys with `gen_random_uuid()`
+  - Store complex data as JSONB when appropriate
+  - Use proper indexes for performance
+- **Virtual Threads**: Leverage Java 21+ virtual threads for better concurrency
+- **Structured Concurrency**: Use StructuredTaskScope for parallel execution instead of reactive patterns
+
+### Testing Practices
+- **Comprehensive Test Coverage**: Aim for 90%+ coverage on service layers
+- **Mock External Dependencies**: Use Mockito for unit tests
+- **Test Naming**: Use descriptive test names that explain the scenario
+  ```java
+  @Test
+  void executeWorkflow_WithInvalidParameters_ShouldReturnValidationError() {
+      // test implementation
+  }
+  ```
+
+### Validation and Error Handling
+- **Parameter Validation**: Create dedicated validator classes for complex validation
+- **Explicit Error Messages**: Provide clear, actionable error messages
+- **Result Pattern**: Use custom Result types for operations that can fail
+  ```java
+  public record ValidationResult(boolean success, String errorMessage) {}
+  ```
+
+### Spring Boot Best Practices
+- **Configuration**: Use `@ConfigurationProperties` for grouped settings
+- **Profiles**: Use Spring profiles for environment-specific configuration
+- **Actuator**: Include health checks and metrics endpoints
+- **Logging**: Use SLF4J with descriptive log messages at appropriate levels
+
+### Code Organization
+- **Package by Feature**: Group related classes by feature, not by layer
+- **Clear Naming**: Use descriptive names that convey intent
+- **Small, Focused Classes**: Each class should have a single responsibility
+- **Avoid Primitive Obsession**: Use domain types instead of primitives when it adds clarity
