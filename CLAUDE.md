@@ -47,6 +47,16 @@ This is a Spring Boot application built with Java 24 that integrates Spring AI w
    - Close story after PR is merged
    - Maintain comprehensive test coverage
 
+5. **Story Refinement Session** (After Each Story Completion)
+   - Review lessons learned from completed story
+   - Assess impact on upcoming stories in the Epic
+   - Update GitHub issues for subsequent stories based on:
+     - Architecture changes or refactoring from completed story
+     - New technical insights or requirements discovered
+     - API endpoint changes, class renames, or schema updates
+   - Refine acceptance criteria and technical details as needed
+   - Ensure all upcoming stories align with current system state
+
 5. **Epic Completion & Integration**
    - Complete all stories in Epic through individual PRs
    - Final Epic testing on `develop` branch
