@@ -85,8 +85,8 @@ if [ $? -eq 0 ] && [ "$(echo $TEMPLATES | jq length)" -gt 0 ]; then
     echo "✅ Template system is working"
     echo "Available templates: $(echo $TEMPLATES | jq -r '.[].name' | paste -sd, -)"
     
-    # Test Story 3 enhanced parameter discovery
-    TEMPLATE_ID=$(echo $TEMPLATES | jq -r '.[0].id')
+    # Test Story 3 enhanced parameter discovery  
+    TEMPLATE_ID=$(echo "$TEMPLATES" | jq -r '.[0].id' 2>/dev/null | tr -d '\n')
     echo ""
     echo "4. Testing Story 3 - Enhanced Parameter Discovery API:"
     PARAMS=$(curl -s "${API_BASE}/api/templates/${TEMPLATE_ID}/parameters")
@@ -97,12 +97,12 @@ if [ $? -eq 0 ] && [ "$(echo $TEMPLATES | jq length)" -gt 0 ]; then
         echo "📝 Parameters found: $(echo $PARAMS | jq '.parameters | length')"
         echo ""
         echo "🔍 Sample parameter with metadata:"
-        echo $PARAMS | jq -C '.parameters[0] | {
+        echo "$PARAMS" | jq -C '.parameters[0] | {
             name, 
             type, 
             required, 
             validation: (.validation | length), 
-            metadata: {placeholder, helpText, order, group}
+            metadata
         }'
         echo ""
         echo "✅ Story 3 parameter discovery verification complete"

@@ -87,16 +87,25 @@ fi
 echo ""
 
 # Test Story 3 enhanced parameter discovery
-TEMPLATE_ID=$(echo $TEMPLATES | jq -r '.[0].id')
+TEMPLATE_ID=$(echo "$TEMPLATES" | jq -r '.[0].id' 2>/dev/null | tr -d '\n')
 echo "3. Testing Story 3 - Enhanced Parameter Discovery API:"
 PARAMS=$(curl -s --max-time 10 "${API_BASE}/api/templates/${TEMPLATE_ID}/parameters")
 
 if [ $? -eq 0 ] && echo "$PARAMS" | jq -e '.parameters' > /dev/null; then
     echo "✅ Enhanced parameter discovery API working in Kubernetes"
-    echo "📋 Template: $(echo $PARAMS | jq -r '.templateName')"
-    echo "📝 Parameters found: $(echo $PARAMS | jq '.parameters | length')"
-    echo "🔍 Validation rules: $(echo $PARAMS | jq '[.parameters[].validation | length] | add') total"
-    echo "🎯 Parameter ordering: $(echo $PARAMS | jq -r '.parameters | map(.metadata.order) | sort | join(" → ")')"
+    echo "📋 Template: $(echo "$PARAMS" | jq -r '.templateName')"
+    echo "📝 Parameters found: $(echo "$PARAMS" | jq '.parameters | length')"
+    echo "🔍 Validation rules: $(echo "$PARAMS" | jq '[.parameters[].validation | length] | add') total"
+    echo ""
+    echo "🔍 Sample parameter with metadata:"
+    echo "$PARAMS" | jq -C '.parameters[0] | {
+        name, 
+        type, 
+        required, 
+        validation: (.validation | length), 
+        metadata
+    }'
+    echo ""
     echo "✅ Story 3 features verified in Kubernetes"
 else
     echo "❌ Enhanced parameter discovery API failed in Kubernetes"
