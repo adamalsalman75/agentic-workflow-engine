@@ -55,21 +55,6 @@ Tests the core workflow engine functionality.
 ./scripts/local/test-workflow.sh
 ```
 
-### `local/check-status.sh`
-Monitors workflow execution status.
-
-**Usage:**
-```bash
-./scripts/local/check-status.sh <goal-id>
-```
-
-### `local/monitor-workflow.sh`
-Real-time monitoring of workflow progress.
-
-**Usage:**
-```bash
-./scripts/local/monitor-workflow.sh <goal-id>
-```
 
 ## Kubernetes Scripts
 
@@ -116,6 +101,22 @@ export NAMESPACE="production"
 export SERVICE_NAME="agentic-workflow-engine"
 export INGRESS_HOST="workflow.yourdomain.com"
 ./scripts/kubernetes/test-k8s-api.sh
+```
+
+### `kubernetes/check-status.sh`
+Checks the overall health and status of the Kubernetes deployment.
+
+**Usage:**
+```bash
+./scripts/kubernetes/check-status.sh
+```
+
+### `kubernetes/monitor-workflow.sh`
+Real-time monitoring of a specific workflow execution in Kubernetes.
+
+**Usage:**
+```bash
+./scripts/kubernetes/monitor-workflow.sh <goal-id>
 ```
 
 ## Environment Variables
