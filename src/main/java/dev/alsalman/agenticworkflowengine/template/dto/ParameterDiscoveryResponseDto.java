@@ -20,7 +20,13 @@ public record ParameterDiscoveryResponseDto(
     public static ParameterDiscoveryResponseDto create(UUID templateId, String templateName, List<Parameter> parameters) {
         List<ParameterResponseDto> parameterDtos = parameters.stream()
             .map(ParameterResponseDto::fromParameter)
-            .sorted((a, b) -> Integer.compare(a.metadata().order(), b.metadata().order()))
+            .sorted((a, b) -> {
+                // Handle null metadata gracefully
+                if (a.metadata() == null || b.metadata() == null) {
+                    return 0;
+                }
+                return Integer.compare(a.metadata().order(), b.metadata().order());
+            })
             .toList();
             
         return new ParameterDiscoveryResponseDto(templateId, templateName, parameterDtos);
