@@ -1,7 +1,7 @@
 package dev.alsalman.agenticworkflowengine.template.validation;
 
-import dev.alsalman.agenticworkflowengine.template.domain.SimpleParameter;
-import dev.alsalman.agenticworkflowengine.template.domain.SimpleParameterType;
+import dev.alsalman.agenticworkflowengine.template.domain.Parameter;
+import dev.alsalman.agenticworkflowengine.template.domain.ParameterType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -12,7 +12,7 @@ class ParameterValidatorTest {
     
     @Test
     void testRequiredParameterMissing() {
-        SimpleParameter param = SimpleParameter.required("test", "Test param", SimpleParameterType.STRING);
+        Parameter param = Parameter.required("test", "Test param", ParameterType.STRING);
         
         ParameterValidator.ValidationResult result = ParameterValidator.validate(param, null);
         
@@ -22,7 +22,7 @@ class ParameterValidatorTest {
     
     @Test
     void testOptionalParameterMissing() {
-        SimpleParameter param = SimpleParameter.optional("test", "Test param", SimpleParameterType.STRING, "default");
+        Parameter param = Parameter.optional("test", "Test param", ParameterType.STRING, "default");
         
         ParameterValidator.ValidationResult result = ParameterValidator.validate(param, null);
         
@@ -32,7 +32,7 @@ class ParameterValidatorTest {
     // String validation tests
     @Test
     void testStringValidation() {
-        SimpleParameter param = SimpleParameter.required("name", "Name", SimpleParameterType.STRING);
+        Parameter param = Parameter.required("name", "Name", ParameterType.STRING);
         
         assertThat(ParameterValidator.validate(param, "John Doe").isValid()).isTrue();
         assertThat(ParameterValidator.validate(param, "").isValid()).isFalse();
@@ -42,7 +42,7 @@ class ParameterValidatorTest {
     // Number validation tests
     @Test
     void testNumberValidation() {
-        SimpleParameter param = SimpleParameter.required("age", "Age", SimpleParameterType.NUMBER);
+        Parameter param = Parameter.required("age", "Age", ParameterType.NUMBER);
         
         assertThat(ParameterValidator.validate(param, 25).isValid()).isTrue();
         assertThat(ParameterValidator.validate(param, "42").isValid()).isTrue();
@@ -58,7 +58,7 @@ class ParameterValidatorTest {
         "15/01/2024"
     })
     void testDateValidation_ValidFormats(String date) {
-        SimpleParameter param = SimpleParameter.required("date", "Date", SimpleParameterType.DATE);
+        Parameter param = Parameter.required("date", "Date", ParameterType.DATE);
         
         assertThat(ParameterValidator.validate(param, date).isValid()).isTrue();
     }
@@ -71,7 +71,7 @@ class ParameterValidatorTest {
         "15-01-2024"   // Wrong format
     })
     void testDateValidation_InvalidFormats(String date) {
-        SimpleParameter param = SimpleParameter.required("date", "Date", SimpleParameterType.DATE);
+        Parameter param = Parameter.required("date", "Date", ParameterType.DATE);
         
         ParameterValidator.ValidationResult result = ParameterValidator.validate(param, date);
         assertThat(result.isValid()).isFalse();
@@ -88,7 +88,7 @@ class ParameterValidatorTest {
         "GBP 2500"
     })
     void testCurrencyValidation_ValidFormats(String currency) {
-        SimpleParameter param = SimpleParameter.required("budget", "Budget", SimpleParameterType.CURRENCY);
+        Parameter param = Parameter.required("budget", "Budget", ParameterType.CURRENCY);
         
         assertThat(ParameterValidator.validate(param, currency).isValid()).isTrue();
     }
@@ -102,7 +102,7 @@ class ParameterValidatorTest {
         "100 200 USD"   // Too many parts
     })
     void testCurrencyValidation_InvalidFormats(String currency) {
-        SimpleParameter param = SimpleParameter.required("budget", "Budget", SimpleParameterType.CURRENCY);
+        Parameter param = Parameter.required("budget", "Budget", ParameterType.CURRENCY);
         
         ParameterValidator.ValidationResult result = ParameterValidator.validate(param, currency);
         assertThat(result.isValid()).isFalse();
@@ -119,7 +119,7 @@ class ParameterValidatorTest {
         "St. Petersburg"
     })
     void testLocationValidation_ValidFormats(String location) {
-        SimpleParameter param = SimpleParameter.required("destination", "Destination", SimpleParameterType.LOCATION);
+        Parameter param = Parameter.required("destination", "Destination", ParameterType.LOCATION);
         
         assertThat(ParameterValidator.validate(param, location).isValid()).isTrue();
     }
@@ -133,7 +133,7 @@ class ParameterValidatorTest {
         "New York!"     // Invalid character
     })
     void testLocationValidation_InvalidFormats(String location) {
-        SimpleParameter param = SimpleParameter.required("destination", "Destination", SimpleParameterType.LOCATION);
+        Parameter param = Parameter.required("destination", "Destination", ParameterType.LOCATION);
         
         ParameterValidator.ValidationResult result = ParameterValidator.validate(param, location);
         assertThat(result.isValid()).isFalse();
@@ -142,7 +142,7 @@ class ParameterValidatorTest {
     // Selection validation tests
     @Test
     void testSelectionValidation() {
-        SimpleParameter param = SimpleParameter.required("style", "Style", SimpleParameterType.SELECTION);
+        Parameter param = Parameter.required("style", "Style", ParameterType.SELECTION);
         
         assertThat(ParameterValidator.validate(param, "Economy").isValid()).isTrue();
         assertThat(ParameterValidator.validate(param, "Business").isValid()).isTrue();

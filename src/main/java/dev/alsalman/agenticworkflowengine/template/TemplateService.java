@@ -1,11 +1,11 @@
 package dev.alsalman.agenticworkflowengine.template;
 
-import dev.alsalman.agenticworkflowengine.template.domain.SimpleParameter;
-import dev.alsalman.agenticworkflowengine.template.domain.SimpleParameterType;
-import dev.alsalman.agenticworkflowengine.template.domain.SimpleWorkflowTemplate;
+import dev.alsalman.agenticworkflowengine.template.domain.Parameter;
+import dev.alsalman.agenticworkflowengine.template.domain.ParameterType;
+import dev.alsalman.agenticworkflowengine.template.domain.WorkflowTemplate;
 import dev.alsalman.agenticworkflowengine.template.domain.ValidationRule;
 import dev.alsalman.agenticworkflowengine.workflow.domain.WorkflowResult;
-import dev.alsalman.agenticworkflowengine.template.repository.SimpleTemplateRepository;
+import dev.alsalman.agenticworkflowengine.template.repository.TemplateRepository;
 import dev.alsalman.agenticworkflowengine.template.validation.ParameterValidator;
 import dev.alsalman.agenticworkflowengine.template.validation.AdvancedParameterValidator;
 import jakarta.annotation.PostConstruct;
@@ -22,27 +22,27 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
-public class SimpleTemplateService {
+public class TemplateService {
     
-    private static final Logger log = LoggerFactory.getLogger(SimpleTemplateService.class);
+    private static final Logger log = LoggerFactory.getLogger(TemplateService.class);
     
-    private final SimpleTemplateRepository repository;
+    private final TemplateRepository repository;
     private final dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator orchestrator;
     private final AdvancedParameterValidator advancedValidator;
     
     // Hardcoded templates for Phase 1 & 2 with validation rules
-    private final List<SimpleParameter> TRIP_PARAMETERS = Arrays.asList(
-        SimpleParameter.required("destination", "Where are you traveling to?", SimpleParameterType.LOCATION),
-        SimpleParameter.requiredWithValidation("startDate", "Departure date", SimpleParameterType.DATE, 
+    private final List<Parameter> TRIP_PARAMETERS = Arrays.asList(
+        Parameter.required("destination", "Where are you traveling to?", ParameterType.LOCATION),
+        Parameter.requiredWithValidation("startDate", "Departure date", ParameterType.DATE, 
             List.of(ValidationRule.dateRange(LocalDate.now(), null, "Departure date cannot be in the past"))),
-        SimpleParameter.requiredWithValidation("duration", "Number of days", SimpleParameterType.NUMBER,
+        Parameter.requiredWithValidation("duration", "Number of days", ParameterType.NUMBER,
             List.of(ValidationRule.range(new BigDecimal("1"), new BigDecimal("365"), "Duration must be between 1 and 365 days"))),
-        SimpleParameter.optional("budget", "Total budget with currency", SimpleParameterType.CURRENCY, "1000 USD"),
-        SimpleParameter.optionalWithValidation("travelStyle", "Travel style preference", SimpleParameterType.SELECTION, "Mid-range",
+        Parameter.optional("budget", "Total budget with currency", ParameterType.CURRENCY, "1000 USD"),
+        Parameter.optionalWithValidation("travelStyle", "Travel style preference", ParameterType.SELECTION, "Mid-range",
             List.of(ValidationRule.allowedValues(List.of("Budget", "Mid-range", "Luxury"), "Travel style must be Budget, Mid-range, or Luxury")))
     );
     
-    public SimpleTemplateService(SimpleTemplateRepository repository, 
+    public TemplateService(TemplateRepository repository, 
                                 dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator orchestrator,
                                 AdvancedParameterValidator advancedValidator) {
         this.repository = repository;
@@ -56,7 +56,7 @@ public class SimpleTemplateService {
         
         try {
             // Check if template already exists by exact name match
-            List<SimpleWorkflowTemplate> existingTemplates = repository.findByName("Simple Trip Planner");
+            List<WorkflowTemplate> existingTemplates = repository.findByName("Simple Trip Planner");
             
             if (!existingTemplates.isEmpty()) {
                 log.info("Trip planning template already exists ({} found), skipping initialization", existingTemplates.size());
@@ -71,7 +71,7 @@ public class SimpleTemplateService {
                 return;
             }
             
-            SimpleWorkflowTemplate tripTemplate = SimpleWorkflowTemplate.create(
+            WorkflowTemplate tripTemplate = WorkflowTemplate.create(
                 "Simple Trip Planner",
                 "Plan a comprehensive trip with dates, budget, and style preferences",
                 "Travel",
@@ -100,19 +100,19 @@ public class SimpleTemplateService {
         }
     }
     
-    public List<SimpleWorkflowTemplate> getAllTemplates() {
+    public List<WorkflowTemplate> getAllTemplates() {
         return repository.findByIsPublicTrue();
     }
     
-    public SimpleWorkflowTemplate getTemplate(UUID templateId) {
+    public WorkflowTemplate getTemplate(UUID templateId) {
         return repository.findById(templateId)
             .orElseThrow(() -> new IllegalArgumentException("Template not found: " + templateId));
     }
     
-    public List<SimpleParameter> getTemplateParameters(UUID templateId) {
+    public List<Parameter> getTemplateParameters(UUID templateId) {
         // For Phase 1, return hardcoded parameters
         // In Phase 2, this would come from database
-        SimpleWorkflowTemplate template = getTemplate(templateId);
+        WorkflowTemplate template = getTemplate(templateId);
         
         if (template.name().equals("Simple Trip Planner")) {
             return TRIP_PARAMETERS;
@@ -124,12 +124,12 @@ public class SimpleTemplateService {
     public WorkflowResult executeTemplate(UUID templateId, Map<String, Object> parameters) {
         log.info("Executing template {} with parameters: {}", templateId, parameters);
         
-        SimpleWorkflowTemplate template = getTemplate(templateId);
-        List<SimpleParameter> templateParams = getTemplateParameters(templateId);
+        WorkflowTemplate template = getTemplate(templateId);
+        List<Parameter> templateParams = getTemplateParameters(templateId);
         
         // Validate all parameters
         List<String> validationErrors = new ArrayList<>();
-        for (SimpleParameter param : templateParams) {
+        for (Parameter param : templateParams) {
             Object value = parameters.get(param.name());
             
             // Use default value if not provided

@@ -2,12 +2,12 @@ package dev.alsalman.agenticworkflowengine.template.service;
 
 import dev.alsalman.agenticworkflowengine.workflow.domain.Goal;
 import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;
-import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;
+import dev.alsalman.agenticworkflowengine.template.TemplateService;
 import dev.alsalman.agenticworkflowengine.workflow.domain.GoalStatus;
-import dev.alsalman.agenticworkflowengine.template.domain.SimpleParameter;
-import dev.alsalman.agenticworkflowengine.template.domain.SimpleWorkflowTemplate;
+import dev.alsalman.agenticworkflowengine.template.domain.Parameter;
+import dev.alsalman.agenticworkflowengine.template.domain.WorkflowTemplate;
 import dev.alsalman.agenticworkflowengine.workflow.domain.WorkflowResult;
-import dev.alsalman.agenticworkflowengine.template.repository.SimpleTemplateRepository;
+import dev.alsalman.agenticworkflowengine.template.repository.TemplateRepository;
 import dev.alsalman.agenticworkflowengine.template.validation.AdvancedParameterValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,10 +31,10 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class SimpleTemplateServicePhase2Test {
+class TemplateServiceTest {
     
     @Mock
-    private SimpleTemplateRepository repository;
+    private TemplateRepository repository;
     
     @Mock
     private WorkflowOrchestrator orchestrator;
@@ -43,15 +43,15 @@ class SimpleTemplateServicePhase2Test {
     private AdvancedParameterValidator advancedValidator;
     
     @InjectMocks
-    private SimpleTemplateService templateService;
+    private TemplateService templateService;
     
     private UUID templateId;
-    private SimpleWorkflowTemplate template;
+    private WorkflowTemplate template;
     
     @BeforeEach
     void setUp() {
         templateId = UUID.randomUUID();
-        template = SimpleWorkflowTemplate.create(
+        template = WorkflowTemplate.create(
             "Simple Trip Planner",
             "Test description",
             "Travel",

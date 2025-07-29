@@ -1,9 +1,9 @@
 package dev.alsalman.agenticworkflowengine.template;
 
-import dev.alsalman.agenticworkflowengine.template.domain.SimpleParameter;
-import dev.alsalman.agenticworkflowengine.template.domain.SimpleWorkflowTemplate;
+import dev.alsalman.agenticworkflowengine.template.domain.Parameter;
+import dev.alsalman.agenticworkflowengine.template.domain.WorkflowTemplate;
 import dev.alsalman.agenticworkflowengine.workflow.domain.WorkflowResult;
-import dev.alsalman.agenticworkflowengine.template.SimpleTemplateService;
+import dev.alsalman.agenticworkflowengine.template.TemplateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -14,30 +14,30 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/simple-templates")
+@RequestMapping("/api/templates")
 @CrossOrigin(origins = "*")
-public class SimpleTemplateController {
+public class TemplateController {
     
-    private static final Logger log = LoggerFactory.getLogger(SimpleTemplateController.class);
+    private static final Logger log = LoggerFactory.getLogger(TemplateController.class);
     
-    private final SimpleTemplateService templateService;
+    private final TemplateService templateService;
     
-    public SimpleTemplateController(SimpleTemplateService templateService) {
+    public TemplateController(TemplateService templateService) {
         this.templateService = templateService;
     }
     
     @GetMapping
-    public ResponseEntity<List<SimpleWorkflowTemplate>> listTemplates() {
+    public ResponseEntity<List<WorkflowTemplate>> listTemplates() {
         log.info("Listing simple templates");
-        List<SimpleWorkflowTemplate> templates = templateService.getAllTemplates();
+        List<WorkflowTemplate> templates = templateService.getAllTemplates();
         return ResponseEntity.ok(templates);
     }
     
     @GetMapping("/{templateId}")
-    public ResponseEntity<SimpleWorkflowTemplate> getTemplate(@PathVariable UUID templateId) {
+    public ResponseEntity<WorkflowTemplate> getTemplate(@PathVariable UUID templateId) {
         log.info("Getting template: {}", templateId);
         try {
-            SimpleWorkflowTemplate template = templateService.getTemplate(templateId);
+            WorkflowTemplate template = templateService.getTemplate(templateId);
             return ResponseEntity.ok(template);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
@@ -45,10 +45,10 @@ public class SimpleTemplateController {
     }
     
     @GetMapping("/{templateId}/parameters")
-    public ResponseEntity<List<SimpleParameter>> getTemplateParameters(@PathVariable UUID templateId) {
+    public ResponseEntity<List<Parameter>> getTemplateParameters(@PathVariable UUID templateId) {
         log.info("Getting parameters for template: {}", templateId);
         try {
-            List<SimpleParameter> parameters = templateService.getTemplateParameters(templateId);
+            List<Parameter> parameters = templateService.getTemplateParameters(templateId);
             return ResponseEntity.ok(parameters);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
