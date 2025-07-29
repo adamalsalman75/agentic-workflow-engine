@@ -8,6 +8,7 @@ import dev.alsalman.agenticworkflowengine.template.domain.WorkflowTemplate;
 import dev.alsalman.agenticworkflowengine.workflow.domain.Goal;
 import dev.alsalman.agenticworkflowengine.workflow.domain.GoalStatus;
 import dev.alsalman.agenticworkflowengine.workflow.domain.WorkflowResult;
+import dev.alsalman.agenticworkflowengine.template.dto.ParameterDiscoveryResponseDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -102,25 +103,29 @@ class TemplateControllerTest {
     @Test
     void getTemplateParameters_WithValidId_ShouldReturnParameters() {
         // Given
+        when(templateService.getTemplate(templateId)).thenReturn(template);
         when(templateService.getTemplateParameters(templateId)).thenReturn(parameters);
 
         // When
-        ResponseEntity<List<Parameter>> response = controller.getTemplateParameters(templateId);
+        ResponseEntity<ParameterDiscoveryResponseDto> response = controller.getTemplateParameters(templateId);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).hasSize(2);
-        assertThat(response.getBody().get(0).name()).isEqualTo("param1");
-        assertThat(response.getBody().get(1).name()).isEqualTo("param2");
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().templateId()).isEqualTo(templateId);
+        assertThat(response.getBody().templateName()).isEqualTo("Test Template");
+        assertThat(response.getBody().parameters()).hasSize(2);
+        assertThat(response.getBody().parameters().get(0).name()).isEqualTo("param1");
+        assertThat(response.getBody().parameters().get(1).name()).isEqualTo("param2");
     }
 
     @Test
     void getTemplateParameters_WithInvalidId_ShouldReturnNotFound() {
         // Given
-        when(templateService.getTemplateParameters(templateId)).thenThrow(new IllegalArgumentException("Template not found"));
+        when(templateService.getTemplate(templateId)).thenThrow(new IllegalArgumentException("Template not found"));
 
         // When
-        ResponseEntity<List<Parameter>> response = controller.getTemplateParameters(templateId);
+        ResponseEntity<ParameterDiscoveryResponseDto> response = controller.getTemplateParameters(templateId);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);

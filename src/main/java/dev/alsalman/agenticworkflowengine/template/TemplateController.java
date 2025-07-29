@@ -4,6 +4,7 @@ import dev.alsalman.agenticworkflowengine.template.domain.Parameter;
 import dev.alsalman.agenticworkflowengine.template.domain.WorkflowTemplate;
 import dev.alsalman.agenticworkflowengine.workflow.domain.WorkflowResult;
 import dev.alsalman.agenticworkflowengine.template.TemplateService;
+import dev.alsalman.agenticworkflowengine.template.dto.ParameterDiscoveryResponseDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -45,11 +46,19 @@ public class TemplateController {
     }
     
     @GetMapping("/{templateId}/parameters")
-    public ResponseEntity<List<Parameter>> getTemplateParameters(@PathVariable UUID templateId) {
+    public ResponseEntity<ParameterDiscoveryResponseDto> getTemplateParameters(@PathVariable UUID templateId) {
         log.info("Getting parameters for template: {}", templateId);
         try {
+            WorkflowTemplate template = templateService.getTemplate(templateId);
             List<Parameter> parameters = templateService.getTemplateParameters(templateId);
-            return ResponseEntity.ok(parameters);
+            
+            ParameterDiscoveryResponseDto response = ParameterDiscoveryResponseDto.create(
+                templateId, 
+                template.name(), 
+                parameters
+            );
+            
+            return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
