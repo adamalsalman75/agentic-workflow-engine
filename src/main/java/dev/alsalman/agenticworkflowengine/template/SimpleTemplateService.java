@@ -3,14 +3,18 @@ package dev.alsalman.agenticworkflowengine.template;
 import dev.alsalman.agenticworkflowengine.template.domain.SimpleParameter;
 import dev.alsalman.agenticworkflowengine.template.domain.SimpleParameterType;
 import dev.alsalman.agenticworkflowengine.template.domain.SimpleWorkflowTemplate;
+import dev.alsalman.agenticworkflowengine.template.domain.ValidationRule;
 import dev.alsalman.agenticworkflowengine.workflow.domain.WorkflowResult;
 import dev.alsalman.agenticworkflowengine.template.repository.SimpleTemplateRepository;
 import dev.alsalman.agenticworkflowengine.template.validation.ParameterValidator;
+import dev.alsalman.agenticworkflowengine.template.validation.AdvancedParameterValidator;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,19 +28,26 @@ public class SimpleTemplateService {
     
     private final SimpleTemplateRepository repository;
     private final dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator orchestrator;
+    private final AdvancedParameterValidator advancedValidator;
     
-    // Hardcoded templates for Phase 1 & 2
+    // Hardcoded templates for Phase 1 & 2 with validation rules
     private final List<SimpleParameter> TRIP_PARAMETERS = Arrays.asList(
         SimpleParameter.required("destination", "Where are you traveling to?", SimpleParameterType.LOCATION),
-        SimpleParameter.required("startDate", "Departure date", SimpleParameterType.DATE),
-        SimpleParameter.required("duration", "Number of days", SimpleParameterType.NUMBER),
+        SimpleParameter.requiredWithValidation("startDate", "Departure date", SimpleParameterType.DATE, 
+            List.of(ValidationRule.dateRange(LocalDate.now(), null, "Departure date cannot be in the past"))),
+        SimpleParameter.requiredWithValidation("duration", "Number of days", SimpleParameterType.NUMBER,
+            List.of(ValidationRule.range(new BigDecimal("1"), new BigDecimal("365"), "Duration must be between 1 and 365 days"))),
         SimpleParameter.optional("budget", "Total budget with currency", SimpleParameterType.CURRENCY, "1000 USD"),
-        SimpleParameter.optional("travelStyle", "Travel style preference", SimpleParameterType.SELECTION, "Mid-range")
+        SimpleParameter.optionalWithValidation("travelStyle", "Travel style preference", SimpleParameterType.SELECTION, "Mid-range",
+            List.of(ValidationRule.allowedValues(List.of("Budget", "Mid-range", "Luxury"), "Travel style must be Budget, Mid-range, or Luxury")))
     );
     
-    public SimpleTemplateService(SimpleTemplateRepository repository, dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator orchestrator) {
+    public SimpleTemplateService(SimpleTemplateRepository repository, 
+                                dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator orchestrator,
+                                AdvancedParameterValidator advancedValidator) {
         this.repository = repository;
         this.orchestrator = orchestrator;
+        this.advancedValidator = advancedValidator;
     }
     
     @PostConstruct
@@ -44,13 +55,19 @@ public class SimpleTemplateService {
         log.info("Initializing Phase 1 simple templates...");
         
         try {
-            // Check if template already exists
-            List<SimpleWorkflowTemplate> existingTemplates = repository.findByIsPublicTrue();
-            boolean tripPlannerExists = existingTemplates.stream()
-                .anyMatch(template -> "Simple Trip Planner".equals(template.name()));
+            // Check if template already exists by exact name match
+            List<SimpleWorkflowTemplate> existingTemplates = repository.findByName("Simple Trip Planner");
             
-            if (tripPlannerExists) {
-                log.info("Trip planning template already exists, skipping initialization");
+            if (!existingTemplates.isEmpty()) {
+                log.info("Trip planning template already exists ({} found), skipping initialization", existingTemplates.size());
+                // Clean up any duplicates if more than one exists
+                if (existingTemplates.size() > 1) {
+                    log.warn("Found {} duplicate templates, keeping only the first one", existingTemplates.size());
+                    for (int i = 1; i < existingTemplates.size(); i++) {
+                        repository.deleteById(existingTemplates.get(i).id());
+                        log.info("Deleted duplicate template with ID: {}", existingTemplates.get(i).id());
+                    }
+                }
                 return;
             }
             
@@ -121,10 +138,12 @@ public class SimpleTemplateService {
                 parameters.put(param.name(), value);
             }
             
-            ParameterValidator.ValidationResult result = ParameterValidator.validate(param, value);
-            if (!result.isValid()) {
-                validationErrors.addAll(result.getErrors());
-            }
+            // Convert value to string for validation
+            String stringValue = value != null ? value.toString() : null;
+            
+            // Use advanced validator for parameters with validation rules
+            List<String> errors = advancedValidator.validateParameter(param, stringValue);
+            validationErrors.addAll(errors);
         }
         
         if (!validationErrors.isEmpty()) {

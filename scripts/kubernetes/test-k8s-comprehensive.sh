@@ -11,6 +11,22 @@ INGRESS_HOST="${INGRESS_HOST:-}"
 echo "=== Comprehensive Kubernetes API Test ==="
 echo ""
 
+# Test cluster connectivity first
+echo "🔍 Checking Kubernetes cluster connectivity..."
+if ! kubectl cluster-info &> /dev/null; then
+    echo "❌ Cannot connect to Kubernetes cluster"
+    echo ""
+    echo "Try refreshing your credentials:"
+    echo "  gcloud container clusters get-credentials <cluster-name> --region <region> --project <project>"
+    echo ""
+    echo "Or check if you're connected to the right context:"
+    echo "  kubectl config current-context"
+    echo ""
+    exit 1
+fi
+echo "✅ Kubernetes cluster is accessible"
+echo ""
+
 # Determine API base URL
 if [ -n "$INGRESS_HOST" ]; then
     API_BASE="https://${INGRESS_HOST}"

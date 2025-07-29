@@ -1,12 +1,9 @@
 -- Drop existing tables to recreate with new schema
--- Drop any leftover template tables first
-DROP TABLE IF EXISTS template_executions CASCADE;
-DROP TABLE IF EXISTS template_parameters CASCADE;
-DROP TABLE IF EXISTS workflow_templates CASCADE;
--- Drop original tables in dependency order
-DROP TABLE IF EXISTS task_dependencies;
-DROP TABLE IF EXISTS tasks;
-DROP TABLE IF EXISTS goals;
+-- Drop all tables in dependency order
+DROP TABLE IF EXISTS task_dependencies CASCADE;
+DROP TABLE IF EXISTS tasks CASCADE;
+DROP TABLE IF EXISTS goals CASCADE;
+DROP TABLE IF EXISTS simple_templates CASCADE;
 
 -- Create tables for the agentic workflow engine with dependency support
 

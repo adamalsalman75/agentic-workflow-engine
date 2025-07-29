@@ -34,7 +34,8 @@ Performs comprehensive health checks and workflow functionality tests with polli
 - Complete workflow execution test with polling
 - Shows real-time status updates
 - Displays final results and task completion
-- Template system validation
+- Template system validation  
+- Story 2 advanced validation testing
 
 **Usage:**
 ```bash
@@ -42,46 +43,12 @@ Performs comprehensive health checks and workflow functionality tests with polli
 ./scripts/local/test-basic-api.sh
 ```
 
-### `local/test-phase2-api.sh`
-Comprehensive testing of the Template System Phase 2 features including:
-- Template listing
-- Parameter discovery
-- Extended parameter types (DATE, CURRENCY, LOCATION)
-- Template execution
-
-**Usage:**
-```bash
-./scripts/local/test-phase2-api.sh
-```
 
 
 
 ## Kubernetes Scripts
 
-### `kubernetes/deploy-to-gke.sh`
-Complete deployment script for Google Kubernetes Engine (GKE).
-
-**Features:**
-- Builds and pushes Docker image to Google Container Registry
-- Creates Kubernetes manifests
-- Deploys application with proper resource limits
-- Sets up health checks and secrets
-
-**Prerequisites:**
-- `gcloud` CLI installed and authenticated
-- `kubectl` installed
-- Docker installed
-- GKE cluster created
-
-**Usage:**
-```bash
-# Set environment variables
-export PROJECT_ID="your-gcp-project"
-export CLUSTER_NAME="your-cluster"
-export ZONE="us-central1-a"
-
-./scripts/kubernetes/deploy-to-gke.sh
-```
+**Note:** Deployment to GKE is handled by GitHub Actions pipeline (`.github/workflows/deploy-to-gke.yml`).
 
 ### `kubernetes/test-k8s-comprehensive.sh`
 Comprehensive Kubernetes testing that combines API testing with workflow monitoring.
@@ -141,15 +108,11 @@ Checks the overall health and status of the Kubernetes deployment.
 # 2. In another terminal, run basic tests
 ./scripts/local/test-basic-api.sh
 
-# 3. Run comprehensive template system tests
-./scripts/local/test-phase2-api.sh
 ```
 
 ### Kubernetes Testing
 ```bash
-# 1. Deploy to GKE
-./scripts/kubernetes/deploy-to-gke.sh
-
+# 1. Deploy via GitHub Actions (automatic on push to main)
 # 2. Run comprehensive tests
 ./scripts/kubernetes/test-k8s-comprehensive.sh
 ```

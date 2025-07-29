@@ -31,7 +31,7 @@ if [ $? -eq 0 ] && echo "$RESPONSE" | jq -e '.goalId' > /dev/null; then
     echo ""
     
     echo "⏳ Waiting for workflow completion..."
-    MAX_ATTEMPTS=30
+    MAX_ATTEMPTS=60  # Increased to 120 seconds for AI workflows
     ATTEMPT=0
     
     while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
@@ -84,6 +84,26 @@ TEMPLATES=$(curl -s "${API_BASE}/api/simple-templates")
 if [ $? -eq 0 ] && [ "$(echo $TEMPLATES | jq length)" -gt 0 ]; then
     echo "✅ Template system is working"
     echo "Available templates: $(echo $TEMPLATES | jq -r '.[].name' | paste -sd, -)"
+    
+    # Quick Story 2 validation test
+    TEMPLATE_ID=$(echo $TEMPLATES | jq -r '.[0].id')
+    echo ""
+    echo "4. Quick Story 2 validation test:"
+    VALIDATION_TEST=$(curl -s -X POST "${API_BASE}/api/simple-templates/${TEMPLATE_ID}/execute" \
+        -H "Content-Type: application/json" \
+        -d '{
+            "destination": "Test City",
+            "startDate": "2023-01-01",
+            "duration": "1000"
+        }')
+    
+    if echo "$VALIDATION_TEST" | jq -e '.success == false' > /dev/null; then
+        echo "✅ Story 2 validation is working (rejected invalid input)"
+        echo "   Error: $(echo $VALIDATION_TEST | jq -r '.message' | head -c 100)..."
+    else
+        echo "⚠️  Story 2 validation may not be working (accepted invalid input)"
+        echo "   Response: $(echo $VALIDATION_TEST | jq -C '.')"
+    fi
 else
     echo "❌ Template system failed or no templates available"
 fi
