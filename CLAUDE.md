@@ -21,7 +21,6 @@ This is a Spring Boot application built with Java 24 that integrates Spring AI w
    - Review and approve PRD 
    - Move PRD to `docs/proposals/in-progress/`
    - Create GitHub Epic linked to the PRD
-   - Create feature branch from `develop` branch (naming: `feature/[epic-name]-[phase]`)
 
 3. **Implementation Planning**
    - Break PRD into incremental deliverables as GitHub Issues/Stories
@@ -29,17 +28,19 @@ This is a Spring Boot application built with Java 24 that integrates Spring AI w
    - Link issues to Epic and PRD sections for traceability
    - Implement phase-by-phase approach as defined in PRD
 
-4. **Development & Testing**
-   - Implement each issue/story incrementally
-   - Full testing and sign-off required for each story before moving to next
-   - Update PRD with phase completion status
+4. **Story Development & Testing**
+   - Create feature branch from `develop` branch for each story (naming: `feature/[story-name]`)
+   - Implement story according to acceptance criteria
+   - Full testing required before PR
+   - Create PR back to `develop` after review and testing
+   - Close story after PR is merged
    - Maintain comprehensive test coverage
 
 5. **Epic Completion & Integration**
-   - Complete all issues in Epic with full testing
-   - Final Epic testing and sign-off
-   - Merge feature branch to `develop` branch
-   - Move completed PRD to `docs/proposals/completed/`
+   - Complete all stories in Epic through individual PRs
+   - Final Epic testing on `develop` branch
+   - Update PRD with phase completion status
+   - Move completed PRD to `docs/proposals/completed/` when all phases done
 
 6. **Production Deployment**
    - Manual testing on `develop` branch
@@ -50,10 +51,12 @@ This is a Spring Boot application built with Java 24 that integrates Spring AI w
 - [ ] Feature implemented according to acceptance criteria
 - [ ] Unit tests written and passing
 - [ ] Integration tests updated if needed
-- [ ] Code reviewed and approved
-- [ ] Documentation updated (CLAUDE.md, README.md)
 - [ ] Manual testing completed
 - [ ] No breaking changes to existing functionality
+- [ ] PR created and reviewed
+- [ ] PR merged to `develop` branch
+- [ ] Story closed with summary comment
+- [ ] Documentation updated (CLAUDE.md, README.md) if needed
 
 ### Definition of Done (Each Epic/PRD)
 - [ ] All phases and stories completed
