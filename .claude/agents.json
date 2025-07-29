@@ -33,8 +33,8 @@
   ],
   "configuration": {
     "auto_invoke_enabled": true,
-    "require_confirmation": false,
-    "show_agent_thinking": false,
+    "require_confirmation": true,
+    "show_agent_thinking": true,
     "parallel_execution": true
   }
 }
