@@ -18,17 +18,63 @@ else
 fi
 echo ""
 
-# Test basic workflow endpoint
+# Test basic workflow endpoint with polling
 echo "2. Testing basic workflow endpoint:"
 RESPONSE=$(curl -s -X POST "${API_BASE}/api/workflow/execute" \
     -H "Content-Type: application/json" \
     -d '{"query": "Create a simple test task"}')
 
-if [ $? -eq 0 ]; then
-    echo "✅ Workflow endpoint is responding"
-    echo "Response: $(echo $RESPONSE | jq -C '.')"
+if [ $? -eq 0 ] && echo "$RESPONSE" | jq -e '.goalId' > /dev/null; then
+    GOAL_ID=$(echo $RESPONSE | jq -r '.goalId')
+    echo "✅ Workflow started successfully"
+    echo "🆔 Goal ID: $GOAL_ID"
+    echo ""
+    
+    echo "⏳ Waiting for workflow completion..."
+    MAX_ATTEMPTS=30
+    ATTEMPT=0
+    
+    while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+        GOAL_STATUS=$(curl -s "${API_BASE}/api/workflow/goal/${GOAL_ID}")
+        STATUS=$(echo $GOAL_STATUS | jq -r '.status')
+        
+        echo "   Attempt $((ATTEMPT+1))/$MAX_ATTEMPTS - Status: $STATUS"
+        
+        if [ "$STATUS" = "COMPLETED" ]; then
+            echo ""
+            echo "✅ Workflow completed successfully!"
+            echo "📋 Final Goal:"
+            echo $GOAL_STATUS | jq -C '.'
+            echo ""
+            
+            echo "📝 Tasks completed:"
+            TASKS=$(curl -s "${API_BASE}/api/workflow/goal/${GOAL_ID}/tasks")
+            echo $TASKS | jq -C '.[] | {description: .description, status: .status, result: .result}'
+            break
+        elif [ "$STATUS" = "FAILED" ]; then
+            echo ""
+            echo "❌ Workflow failed!"
+            echo "📋 Goal details:"
+            echo $GOAL_STATUS | jq -C '.'
+            break
+        elif [ "$STATUS" = "null" ]; then
+            echo "❌ Could not retrieve goal status"
+            break
+        fi
+        
+        ATTEMPT=$((ATTEMPT+1))
+        sleep 2
+    done
+    
+    if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+        echo ""
+        echo "⚠️  Workflow did not complete within $((MAX_ATTEMPTS*2)) seconds"
+        echo "📋 Current status:"
+        echo $GOAL_STATUS | jq -C '.'
+    fi
 else
-    echo "❌ Workflow endpoint failed"
+    echo "❌ Workflow endpoint failed or returned invalid response"
+    echo "Response: $RESPONSE"
 fi
 echo ""
 

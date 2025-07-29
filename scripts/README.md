@@ -27,7 +27,14 @@ Starts the Spring Boot application locally with proper environment setup.
 ```
 
 ### `local/test-basic-api.sh`
-Performs basic health checks and API functionality tests.
+Performs comprehensive health checks and workflow functionality tests with polling.
+
+**Features:**
+- Health endpoint verification
+- Complete workflow execution test with polling
+- Shows real-time status updates
+- Displays final results and task completion
+- Template system validation
 
 **Usage:**
 ```bash
