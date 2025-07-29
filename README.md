@@ -175,6 +175,12 @@ export OPENAI_API_KEY="your-openai-api-key-here"
 
 ### 3. Build and Run
 
+**Option A: IntelliJ IDEA (Recommended)**
+1. Import the project into IntelliJ IDEA
+2. Configure OpenAI API key in IntelliJ's run configuration environment variables
+3. Run `AgenticWorkflowEngineApplication` main class
+
+**Option B: Maven**
 ```bash
 # Build the application
 ./mvnw clean compile
@@ -193,7 +199,7 @@ The workflow engine provides async APIs for both direct workflow execution and t
 
 #### 1. List Available Templates
 
-**Endpoint:** `GET /api/simple-templates`
+**Endpoint:** `GET /api/templates`
 
 **Response:**
 ```json
@@ -212,7 +218,7 @@ The workflow engine provides async APIs for both direct workflow execution and t
 
 #### 2. Get Template Parameters
 
-**Endpoint:** `GET /api/simple-templates/{templateId}/parameters`
+**Endpoint:** `GET /api/templates/{templateId}/parameters`
 
 **Response:**
 ```json
@@ -257,7 +263,7 @@ The workflow engine provides async APIs for both direct workflow execution and t
 
 #### 3. Execute Template
 
-**Endpoint:** `POST /api/simple-templates/{templateId}/execute`
+**Endpoint:** `POST /api/templates/{templateId}/execute`
 
 **Request Body:**
 ```json

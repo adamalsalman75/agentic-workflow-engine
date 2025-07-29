@@ -13,18 +13,7 @@ scripts/
 
 ## Local Development Scripts
 
-### `local/start-local.sh`
-Starts the Spring Boot application locally with proper environment setup.
-
-**Prerequisites:**
-- PostgreSQL running locally
-- Database `agentic_workflow` exists (script will create if missing)
-- `OPENAI_API_KEY` environment variable set
-
-**Usage:**
-```bash
-./scripts/local/start-local.sh
-```
+**Note:** The application is typically started through IntelliJ IDEA with OpenAI API key configured in the IDE environment.
 
 ### `local/test-basic-api.sh`
 Performs comprehensive health checks and workflow functionality tests with polling.
@@ -39,7 +28,7 @@ Performs comprehensive health checks and workflow functionality tests with polli
 
 **Usage:**
 ```bash
-# Make sure application is running first
+# Make sure application is running first (via IntelliJ or ./mvnw spring-boot:run)
 ./scripts/local/test-basic-api.sh
 ```
 
@@ -102,12 +91,12 @@ Checks the overall health and status of the Kubernetes deployment.
 
 ### Local Testing
 ```bash
-# 1. Start the application
-./scripts/local/start-local.sh
+# 1. Start the application (IntelliJ or Maven)
+# IntelliJ: Run AgenticWorkflowEngineApplication
+# OR Maven: ./mvnw spring-boot:run
 
-# 2. In another terminal, run basic tests
+# 2. Run basic tests
 ./scripts/local/test-basic-api.sh
-
 ```
 
 ### Kubernetes Testing
