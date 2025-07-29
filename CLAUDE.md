@@ -5,6 +5,78 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 This is a Spring Boot application built with Java 24 that integrates Spring AI with OpenAI models to create an agentic workflow engine with dependency-aware parallel execution. The project uses Maven for build management and follows standard Spring Boot project structure.
 
+## Key Git Rules
+
+### Branch Permissions
+- **develop branch**: Claude must ask permission before pushing
+- **main branch**: Claude must NEVER push directly
+- **feature branches**: Claude may commit and push freely
+
+### Commit Guidelines
+- Feature branches should reference GitHub issue: `feature/story-{number}-{description}`
+  - Example: `feature/story-5-advanced-validation`
+  - Example: `feature/story-12-chat-interface`
+- Commits should be atomic and well-described
+- Use conventional commit format (feat:, fix:, docs:, chore:, test:)
+
+## Ways of Working
+
+### Feature Development Process
+1. **Ideation & Planning**
+   - Brainstorm ideas and discuss options
+   - Select one idea for development
+   - Create comprehensive PRD document (Product Requirements Document)
+   - Place PRD in `docs/proposals/in-review/` for evaluation
+
+2. **PRD Approval & Epic Creation**
+   - Review and approve PRD 
+   - Move PRD to `docs/proposals/in-progress/`
+   - Create GitHub Epic linked to the PRD
+
+3. **Implementation Planning**
+   - Break PRD into incremental deliverables as GitHub Issues/Stories
+   - Define clear acceptance criteria for each issue
+   - Link issues to Epic and PRD sections for traceability
+   - Implement phase-by-phase approach as defined in PRD
+
+4. **Story Development & Testing**
+   - Create feature branch from `develop` branch for each story (naming: `feature/[story-name]`)
+   - Implement story according to acceptance criteria
+   - Full testing required before PR
+   - Create PR back to `develop` after review and testing
+   - Close story after PR is merged
+   - Maintain comprehensive test coverage
+
+5. **Epic Completion & Integration**
+   - Complete all stories in Epic through individual PRs
+   - Final Epic testing on `develop` branch
+   - Update PRD with phase completion status
+   - Move completed PRD to `docs/proposals/completed/` when all phases done
+
+6. **Production Deployment**
+   - Manual testing on `develop` branch
+   - Merge `develop` to `main` branch
+   - Deploy to GKE production environment
+
+### Definition of Done (Each Story)
+- [ ] Feature implemented according to acceptance criteria
+- [ ] Unit tests written and passing
+- [ ] Integration tests updated if needed
+- [ ] Manual testing completed
+- [ ] No breaking changes to existing functionality
+- [ ] PR created and reviewed
+- [ ] PR merged to `develop` branch
+- [ ] Story closed with summary comment
+- [ ] Documentation updated (CLAUDE.md, README.md) if needed
+
+### Definition of Done (Each Epic/PRD)
+- [ ] All phases and stories completed
+- [ ] Full end-to-end testing
+- [ ] Performance testing if applicable
+- [ ] Security review if applicable
+- [ ] Documentation comprehensive and up-to-date
+- [ ] Ready for production deployment
+
 ## Core Architecture
 The system uses a pure orchestration pattern with service-based architecture:
 
@@ -159,10 +231,59 @@ The project follows enterprise testing practices with comprehensive coverage:
 - Spring AI OpenAI integration requires appropriate API keys and configuration
 - The application name is set to "agentic-workflow-engine"
 
-## Java Principals
-- Use immutable records
-- Use RestClient over RestTemplate
-- Use Spring Data JDBC 
-- Use postgres
-- Use virtual threads
-- Use Structured Task Scope for asynchronous code over reactive.
+## Java Principles
+
+### Core Design Principles
+- **Immutable Records**: Use Java records for all domain models to ensure thread safety and immutability
+  ```java
+  public record Task(UUID id, String description, String status) {}
+  ```
+- **Constructor-based Dependency Injection**: Prefer constructor injection over field injection
+  ```java
+  public SimpleTemplateService(SimpleTemplateRepository repository) {
+      this.repository = repository;
+  }
+  ```
+- **Service Layer Pattern**: Encapsulate business logic in service classes, keep controllers thin
+- **Repository Pattern**: Use Spring Data JDBC repositories for data access
+
+### Technology Choices
+- **RestClient over RestTemplate**: Use the modern RestClient for HTTP calls
+- **Spring Data JDBC over JPA**: Simpler, more predictable than JPA for our use cases
+- **PostgreSQL Database**: 
+  - Use UUID primary keys with `gen_random_uuid()`
+  - Store complex data as JSONB when appropriate
+  - Use proper indexes for performance
+- **Virtual Threads**: Leverage Java 21+ virtual threads for better concurrency
+- **Structured Concurrency**: Use StructuredTaskScope for parallel execution instead of reactive patterns
+
+### Testing Practices
+- **Comprehensive Test Coverage**: Aim for 90%+ coverage on service layers
+- **Mock External Dependencies**: Use Mockito for unit tests
+- **Test Naming**: Use descriptive test names that explain the scenario
+  ```java
+  @Test
+  void executeWorkflow_WithInvalidParameters_ShouldReturnValidationError() {
+      // test implementation
+  }
+  ```
+
+### Validation and Error Handling
+- **Parameter Validation**: Create dedicated validator classes for complex validation
+- **Explicit Error Messages**: Provide clear, actionable error messages
+- **Result Pattern**: Use custom Result types for operations that can fail
+  ```java
+  public record ValidationResult(boolean success, String errorMessage) {}
+  ```
+
+### Spring Boot Best Practices
+- **Configuration**: Use `@ConfigurationProperties` for grouped settings
+- **Profiles**: Use Spring profiles for environment-specific configuration
+- **Actuator**: Include health checks and metrics endpoints
+- **Logging**: Use SLF4J with descriptive log messages at appropriate levels
+
+### Code Organization
+- **Package by Feature**: Group related classes by feature, not by layer
+- **Clear Naming**: Use descriptive names that convey intent
+- **Small, Focused Classes**: Each class should have a single responsibility
+- **Avoid Primitive Obsession**: Use domain types instead of primitives when it adds clarity

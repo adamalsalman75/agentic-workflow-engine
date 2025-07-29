@@ -1,4 +1,9 @@
 -- Drop existing tables to recreate with new schema
+-- Drop any leftover template tables first
+DROP TABLE IF EXISTS template_executions CASCADE;
+DROP TABLE IF EXISTS template_parameters CASCADE;
+DROP TABLE IF EXISTS workflow_templates CASCADE;
+-- Drop original tables in dependency order
 DROP TABLE IF EXISTS task_dependencies;
 DROP TABLE IF EXISTS tasks;
 DROP TABLE IF EXISTS goals;
@@ -47,3 +52,15 @@ CREATE INDEX idx_tasks_informational_dependencies ON tasks USING GIN(information
 CREATE INDEX idx_task_dependencies_task_id ON task_dependencies(task_id);
 CREATE INDEX idx_task_dependencies_depends_on ON task_dependencies(depends_on_task_id);
 CREATE INDEX idx_task_dependencies_type ON task_dependencies(dependency_type);
+
+-- Phase 1: Simple template table without complex data types
+CREATE TABLE IF NOT EXISTS simple_templates (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    category VARCHAR(100),
+    prompt_template TEXT NOT NULL,
+    author VARCHAR(255),
+    is_public BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);

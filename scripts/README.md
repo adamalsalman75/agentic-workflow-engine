@@ -1,167 +1,175 @@
 # Scripts Directory
 
-This directory contains utility scripts for testing and monitoring the Agentic Workflow Engine deployed on GKE.
+This directory contains scripts for testing and deploying the Agentic Workflow Engine.
 
-## Prerequisites
+## Structure
 
-- `kubectl` configured with cluster access
-- `curl` command-line tool  
-- `jq` for JSON formatting
-- Bash shell
-
-## Scripts
-
-### 🧪 `test-workflow.sh`
-Start and test a new workflow execution.
-
-```bash
-# Test with default query
-./test-workflow.sh
-
-# Test with custom query
-./test-workflow.sh "Plan a weekend trip to the mountains"
-
-# Test complex workflow
-./test-workflow.sh "Help me start a small restaurant business including permits, location, menu planning, and marketing strategy"
 ```
+scripts/
+├── local/          # Local development and testing scripts
+├── kubernetes/     # Kubernetes deployment and testing scripts
+└── README.md       # This file
+```
+
+## Local Development Scripts
+
+### `local/start-local.sh`
+Starts the Spring Boot application locally with proper environment setup.
+
+**Prerequisites:**
+- PostgreSQL running locally
+- Database `agentic_workflow` exists (script will create if missing)
+- `OPENAI_API_KEY` environment variable set
+
+**Usage:**
+```bash
+./scripts/local/start-local.sh
+```
+
+### `local/test-basic-api.sh`
+Performs comprehensive health checks and workflow functionality tests with polling.
 
 **Features:**
-- Automatically gets cluster public IP
-- Creates workflow and captures goal ID
-- Shows monitoring commands
-- Error handling for common issues
+- Health endpoint verification
+- Complete workflow execution test with polling
+- Shows real-time status updates
+- Displays final results and task completion
+- Template system validation
 
-### 🔍 `check-status.sh`
-Check the overall health and status of the deployment.
-
+**Usage:**
 ```bash
-./check-status.sh
+# Make sure application is running first
+./scripts/local/test-basic-api.sh
 ```
 
-**Shows:**
-- Kubernetes pod status
-- Service status and external IP
-- API health check
-- Component health status
-- Quick deployment stats
+### `local/test-phase2-api.sh`
+Comprehensive testing of the Template System Phase 2 features including:
+- Template listing
+- Parameter discovery
+- Extended parameter types (DATE, CURRENCY, LOCATION)
+- Template execution
 
-### 📊 `monitor-workflow.sh`
-Real-time monitoring of a specific workflow execution.
-
+**Usage:**
 ```bash
-# Monitor a workflow (get goal ID from test-workflow.sh)
-./monitor-workflow.sh 550e8400-e29b-41d4-a716-446655440000
+./scripts/local/test-phase2-api.sh
 ```
+
+
+
+## Kubernetes Scripts
+
+### `kubernetes/deploy-to-gke.sh`
+Complete deployment script for Google Kubernetes Engine (GKE).
 
 **Features:**
-- Real-time status updates
-- Task completion tracking
-- Token usage monitoring
-- Automatic completion detection
-- Clean formatted output
+- Builds and pushes Docker image to Google Container Registry
+- Creates Kubernetes manifests
+- Deploys application with proper resource limits
+- Sets up health checks and secrets
+
+**Prerequisites:**
+- `gcloud` CLI installed and authenticated
+- `kubectl` installed
+- Docker installed
+- GKE cluster created
+
+**Usage:**
+```bash
+# Set environment variables
+export PROJECT_ID="your-gcp-project"
+export CLUSTER_NAME="your-cluster"
+export ZONE="us-central1-a"
+
+./scripts/kubernetes/deploy-to-gke.sh
+```
+
+### `kubernetes/test-k8s-comprehensive.sh`
+Comprehensive Kubernetes testing that combines API testing with workflow monitoring.
+
+**Features:**
+- Auto-detects service endpoint (LoadBalancer, Ingress, or port-forward)
+- Health check validation
+- Template system testing
+- Complete workflow execution with real-time monitoring
+- Template execution testing
+- Displays final results and task completion
+- Longer timeout for K8s latency
+
+**Usage:**
+```bash
+# Test against default service
+./scripts/kubernetes/test-k8s-comprehensive.sh
+
+# Test with custom configuration
+export NAMESPACE="production"
+export SERVICE_NAME="agentic-workflow-engine"
+export INGRESS_HOST="workflow.yourdomain.com"
+./scripts/kubernetes/test-k8s-comprehensive.sh
+```
+
+### `kubernetes/check-status.sh`
+Checks the overall health and status of the Kubernetes deployment.
+
+**Usage:**
+```bash
+./scripts/kubernetes/check-status.sh
+```
+
+## Environment Variables
+
+### Local Development
+- `OPENAI_API_KEY` - Your OpenAI API key (required)
+- `DATABASE_URL` - PostgreSQL connection string (default: `jdbc:postgresql://localhost:5432/agentic_workflow`)
+- `DATABASE_USERNAME` - Database username (default: `postgres`)
+- `DATABASE_PASSWORD` - Database password (default: `password`)
+
+### Kubernetes Deployment
+- `PROJECT_ID` - Google Cloud Project ID
+- `CLUSTER_NAME` - GKE cluster name
+- `ZONE` - GKE cluster zone
+- `NAMESPACE` - Kubernetes namespace (default: `default`)
+- `SERVICE_NAME` - Kubernetes service name
+- `INGRESS_HOST` - Ingress hostname for external access
 
 ## Quick Start
 
-1. **Check if everything is running:**
-   ```bash
-   ./check-status.sh
-   ```
-
-2. **Start a test workflow:**
-   ```bash
-   ./test-workflow.sh "Plan a coffee break"
-   ```
-
-3. **Monitor the workflow (use goal ID from step 2):**
-   ```bash
-   ./monitor-workflow.sh <goal-id-from-step-2>
-   ```
-
-## Environment Setup
-
-The scripts automatically handle environment setup, but you can manually set:
-
+### Local Testing
 ```bash
-# Get cluster credentials
-gcloud container clusters get-credentials agentic-workflow-cluster --zone us-west1 --project adam-466814
+# 1. Start the application
+./scripts/local/start-local.sh
 
-# Export public IP (done automatically by scripts)
-export PUBLIC_IP=$(kubectl get svc agentic-workflow-engine -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+# 2. In another terminal, run basic tests
+./scripts/local/test-basic-api.sh
+
+# 3. Run comprehensive template system tests
+./scripts/local/test-phase2-api.sh
 ```
 
-## Example Output
-
-### test-workflow.sh
-```
-🚀 Starting workflow: Plan a weekend trip to the mountains
-📍 API Base URL: http://35.247.57.3
-
-✅ Workflow started successfully!
-🆔 Goal ID: 550e8400-e29b-41d4-a716-446655440000
-🔗 Goal URL: http://35.247.57.3/api/workflow/goal/550e8400-e29b-41d4-a716-446655440000
-📋 Tasks URL: http://35.247.57.3/api/workflow/goal/550e8400-e29b-41d4-a716-446655440000/tasks
-
-⏳ Waiting for initial processing...
-
-📊 Current Status:
-{
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "query": "Plan a weekend trip to the mountains",
-  "status": "PLANNING",
-  "createdAt": "2025-07-27T10:00:00Z",
-  "completedAt": null
-}
-```
-
-### check-status.sh
-```
-🔍 Agentic Workflow Engine Status Check
-=====================================
-
-☸️  Cluster Status:
-NAME                                       READY   STATUS    RESTARTS   AGE
-agentic-workflow-engine-74476d5574-h7zmt   1/1     Running   0          10m
-postgres-576fbb8bfc-lr6gc                  1/1     Running   0          10m
-
-🌐 Service Status:
-NAME                      TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
-agentic-workflow-engine   LoadBalancer   34.118.239.165   35.247.57.3   80:32759/TCP   10m
-
-🌍 Public IP: 35.247.57.3
-🔗 API Base URL: http://35.247.57.3
-
-❤️  API Health Check:
-✅ API is healthy and responding
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"kubectl not configured"**
-   ```bash
-   gcloud container clusters get-credentials agentic-workflow-cluster --zone us-west1 --project adam-466814
-   ```
-
-2. **"No external IP available"**
-   - LoadBalancer may still be provisioning
-   - Wait a few minutes and try again
-
-3. **"API not responding"**
-   - Check pod status: `kubectl get pods`
-   - Check logs: `kubectl logs deployment/agentic-workflow-engine`
-
-4. **Permission denied on scripts**
-   ```bash
-   chmod +x scripts/*.sh
-   ```
-
-## Integration with CI/CD
-
-These scripts can be integrated into CI/CD pipelines for automated testing:
-
+### Kubernetes Testing
 ```bash
-# In your CI pipeline
-./scripts/check-status.sh
-./scripts/test-workflow.sh "Integration test workflow"
+# 1. Deploy to GKE
+./scripts/kubernetes/deploy-to-gke.sh
+
+# 2. Run comprehensive tests
+./scripts/kubernetes/test-k8s-comprehensive.sh
+```
+
+## Common Issues
+
+### Local Development
+- **Database connection errors**: Ensure PostgreSQL is running and database exists
+- **OpenAI API errors**: Check that `OPENAI_API_KEY` is set correctly
+- **Port 8080 in use**: Stop other applications using port 8080
+
+### Kubernetes
+- **Image pull errors**: Ensure Docker image is pushed to correct registry
+- **Secret not found**: Create required secrets before deployment
+- **Pod crashes**: Check logs with `kubectl logs` and verify environment variables
+
+## Script Permissions
+
+Make scripts executable:
+```bash
+chmod +x scripts/local/*.sh
+chmod +x scripts/kubernetes/*.sh
 ```

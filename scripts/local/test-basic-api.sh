@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# Basic API health check and simple workflow test
+
+API_BASE="http://localhost:8080"
+
+echo "=== Basic API Test Script ==="
+echo ""
+
+# Health check
+echo "1. Health check:"
+if curl -s "${API_BASE}/actuator/health" | jq -e '.status == "UP"' > /dev/null; then
+    echo "✅ Application is healthy"
+else
+    echo "❌ Application is not healthy or not running"
+    echo "   Make sure to run: ./scripts/local/start-local.sh"
+    exit 1
+fi
+echo ""
+
+# Test basic workflow endpoint with polling
+echo "2. Testing basic workflow endpoint:"
+RESPONSE=$(curl -s -X POST "${API_BASE}/api/workflow/execute" \
+    -H "Content-Type: application/json" \
+    -d '{"query": "Create a simple test task"}')
+
+if [ $? -eq 0 ] && echo "$RESPONSE" | jq -e '.goalId' > /dev/null; then
+    GOAL_ID=$(echo $RESPONSE | jq -r '.goalId')
+    echo "✅ Workflow started successfully"
+    echo "🆔 Goal ID: $GOAL_ID"
+    echo ""
+    
+    echo "⏳ Waiting for workflow completion..."
+    MAX_ATTEMPTS=30
+    ATTEMPT=0
+    
+    while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+        GOAL_STATUS=$(curl -s "${API_BASE}/api/workflow/goal/${GOAL_ID}")
+        STATUS=$(echo $GOAL_STATUS | jq -r '.status')
+        
+        echo "   Attempt $((ATTEMPT+1))/$MAX_ATTEMPTS - Status: $STATUS"
+        
+        if [ "$STATUS" = "COMPLETED" ]; then
+            echo ""
+            echo "✅ Workflow completed successfully!"
+            echo "📋 Final Goal:"
+            echo $GOAL_STATUS | jq -C '.'
+            echo ""
+            
+            echo "📝 Tasks completed:"
+            TASKS=$(curl -s "${API_BASE}/api/workflow/goal/${GOAL_ID}/tasks")
+            echo $TASKS | jq -C '.[] | {description: .description, status: .status, result: .result}'
+            break
+        elif [ "$STATUS" = "FAILED" ]; then
+            echo ""
+            echo "❌ Workflow failed!"
+            echo "📋 Goal details:"
+            echo $GOAL_STATUS | jq -C '.'
+            break
+        elif [ "$STATUS" = "null" ]; then
+            echo "❌ Could not retrieve goal status"
+            break
+        fi
+        
+        ATTEMPT=$((ATTEMPT+1))
+        sleep 2
+    done
+    
+    if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+        echo ""
+        echo "⚠️  Workflow did not complete within $((MAX_ATTEMPTS*2)) seconds"
+        echo "📋 Current status:"
+        echo $GOAL_STATUS | jq -C '.'
+    fi
+else
+    echo "❌ Workflow endpoint failed or returned invalid response"
+    echo "Response: $RESPONSE"
+fi
+echo ""
+
+# Test template system
+echo "3. Testing template system:"
+TEMPLATES=$(curl -s "${API_BASE}/api/simple-templates")
+if [ $? -eq 0 ] && [ "$(echo $TEMPLATES | jq length)" -gt 0 ]; then
+    echo "✅ Template system is working"
+    echo "Available templates: $(echo $TEMPLATES | jq -r '.[].name' | paste -sd, -)"
+else
+    echo "❌ Template system failed or no templates available"
+fi
+echo ""
+
+echo "=== Basic API test completed ==="
