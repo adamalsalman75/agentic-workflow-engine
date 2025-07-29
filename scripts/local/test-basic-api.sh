@@ -31,7 +31,7 @@ if [ $? -eq 0 ] && echo "$RESPONSE" | jq -e '.goalId' > /dev/null; then
     echo ""
     
     echo "⏳ Waiting for workflow completion..."
-    MAX_ATTEMPTS=30
+    MAX_ATTEMPTS=60  # Increased to 120 seconds for AI workflows
     ATTEMPT=0
     
     while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
@@ -80,10 +80,54 @@ echo ""
 
 # Test template system
 echo "3. Testing template system:"
-TEMPLATES=$(curl -s "${API_BASE}/api/simple-templates")
+TEMPLATES=$(curl -s "${API_BASE}/api/templates")
 if [ $? -eq 0 ] && [ "$(echo $TEMPLATES | jq length)" -gt 0 ]; then
     echo "✅ Template system is working"
     echo "Available templates: $(echo $TEMPLATES | jq -r '.[].name' | paste -sd, -)"
+    
+    # Test Story 3 enhanced parameter discovery  
+    TEMPLATE_ID=$(echo "$TEMPLATES" | jq -r '.[0].id' 2>/dev/null | tr -d '\n')
+    echo ""
+    echo "4. Testing Story 3 - Enhanced Parameter Discovery API:"
+    PARAMS=$(curl -s "${API_BASE}/api/templates/${TEMPLATE_ID}/parameters")
+    
+    if [ $? -eq 0 ] && echo "$PARAMS" | jq -e '.parameters' > /dev/null; then
+        echo "✅ Enhanced parameter discovery API working"
+        echo "📋 Template: $(echo $PARAMS | jq -r '.templateName')"
+        echo "📝 Parameters found: $(echo $PARAMS | jq '.parameters | length')"
+        echo ""
+        echo "🔍 Sample parameter with metadata:"
+        echo "$PARAMS" | jq -C '.parameters[0] | {
+            name, 
+            type, 
+            required, 
+            validation: (.validation | length), 
+            metadata
+        }'
+        echo ""
+        echo "✅ Story 3 parameter discovery verification complete"
+    else
+        echo "❌ Enhanced parameter discovery API failed"
+    fi
+    
+    # Quick Story 2 validation test
+    echo ""
+    echo "5. Quick Story 2 validation test:"
+    VALIDATION_TEST=$(curl -s -X POST "${API_BASE}/api/templates/${TEMPLATE_ID}/execute" \
+        -H "Content-Type: application/json" \
+        -d '{
+            "destination": "Test City",
+            "startDate": "2023-01-01",
+            "duration": "1000"
+        }')
+    
+    if echo "$VALIDATION_TEST" | jq -e '.success == false' > /dev/null; then
+        echo "✅ Story 2 validation is working (rejected invalid input)"
+        echo "   Error: $(echo $VALIDATION_TEST | jq -r '.message' | head -c 100)..."
+    else
+        echo "⚠️  Story 2 validation may not be working (accepted invalid input)"
+        echo "   Response: $(echo $VALIDATION_TEST | jq -C '.')"
+    fi
 else
     echo "❌ Template system failed or no templates available"
 fi

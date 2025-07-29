@@ -1,12 +1,9 @@
 -- Drop existing tables to recreate with new schema
--- Drop any leftover template tables first
-DROP TABLE IF EXISTS template_executions CASCADE;
-DROP TABLE IF EXISTS template_parameters CASCADE;
-DROP TABLE IF EXISTS workflow_templates CASCADE;
--- Drop original tables in dependency order
-DROP TABLE IF EXISTS task_dependencies;
-DROP TABLE IF EXISTS tasks;
-DROP TABLE IF EXISTS goals;
+-- Drop all tables in dependency order
+DROP TABLE IF EXISTS task_dependencies CASCADE;
+DROP TABLE IF EXISTS tasks CASCADE;
+DROP TABLE IF EXISTS goals CASCADE;
+DROP TABLE IF EXISTS templates CASCADE;
 
 -- Create tables for the agentic workflow engine with dependency support
 
@@ -54,7 +51,7 @@ CREATE INDEX idx_task_dependencies_depends_on ON task_dependencies(depends_on_ta
 CREATE INDEX idx_task_dependencies_type ON task_dependencies(dependency_type);
 
 -- Phase 1: Simple template table without complex data types
-CREATE TABLE IF NOT EXISTS simple_templates (
+CREATE TABLE IF NOT EXISTS templates (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     description TEXT,

@@ -1,7 +1,7 @@
 package dev.alsalman.agenticworkflowengine.template.validation;
 
-import dev.alsalman.agenticworkflowengine.template.domain.SimpleParameter;
-import dev.alsalman.agenticworkflowengine.template.domain.SimpleParameterType;
+import dev.alsalman.agenticworkflowengine.template.domain.Parameter;
+import dev.alsalman.agenticworkflowengine.template.domain.ParameterType;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -57,7 +57,7 @@ public class ParameterValidator {
         }
     }
     
-    public static ValidationResult validate(SimpleParameter parameter, Object value) {
+    public static ValidationResult validate(Parameter parameter, Object value) {
         if (value == null) {
             if (parameter.required()) {
                 return ValidationResult.failure("Required parameter '" + parameter.name() + "' is missing");
@@ -75,14 +75,14 @@ public class ParameterValidator {
         };
     }
     
-    private static ValidationResult validateString(SimpleParameter parameter, String value) {
+    private static ValidationResult validateString(Parameter parameter, String value) {
         if (value.trim().isEmpty() && parameter.required()) {
             return ValidationResult.failure("Required parameter '" + parameter.name() + "' cannot be empty");
         }
         return ValidationResult.success();
     }
     
-    private static ValidationResult validateNumber(SimpleParameter parameter, Object value) {
+    private static ValidationResult validateNumber(Parameter parameter, Object value) {
         try {
             if (value instanceof Number) {
                 return ValidationResult.success();
@@ -94,7 +94,7 @@ public class ParameterValidator {
         }
     }
     
-    private static ValidationResult validateSelection(SimpleParameter parameter, String value) {
+    private static ValidationResult validateSelection(Parameter parameter, String value) {
         // For now, any non-empty string is valid for selection
         // In Phase 2 Story 2, we'll add allowed values validation
         if (value.trim().isEmpty() && parameter.required()) {
@@ -103,7 +103,7 @@ public class ParameterValidator {
         return ValidationResult.success();
     }
     
-    private static ValidationResult validateDate(SimpleParameter parameter, String value) {
+    private static ValidationResult validateDate(Parameter parameter, String value) {
         // Try multiple date formats
         for (DateTimeFormatter formatter : DATE_FORMATTERS) {
             try {
@@ -120,7 +120,7 @@ public class ParameterValidator {
         );
     }
     
-    private static ValidationResult validateCurrency(SimpleParameter parameter, String value) {
+    private static ValidationResult validateCurrency(Parameter parameter, String value) {
         // Format: "100 USD" or "USD 100" or just "USD"
         String[] parts = value.trim().split("\\s+");
         
@@ -173,7 +173,7 @@ public class ParameterValidator {
         return ValidationResult.success();
     }
     
-    private static ValidationResult validateLocation(SimpleParameter parameter, String value) {
+    private static ValidationResult validateLocation(Parameter parameter, String value) {
         // Basic location validation - just check it's not empty
         // Could be enhanced with geocoding API integration
         if (value.trim().isEmpty() && parameter.required()) {

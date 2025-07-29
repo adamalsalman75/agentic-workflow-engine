@@ -175,6 +175,12 @@ export OPENAI_API_KEY="your-openai-api-key-here"
 
 ### 3. Build and Run
 
+**Option A: IntelliJ IDEA (Recommended)**
+1. Import the project into IntelliJ IDEA
+2. Configure OpenAI API key in IntelliJ's run configuration environment variables
+3. Run `AgenticWorkflowEngineApplication` main class
+
+**Option B: Maven**
 ```bash
 # Build the application
 ./mvnw clean compile
@@ -193,7 +199,7 @@ The workflow engine provides async APIs for both direct workflow execution and t
 
 #### 1. List Available Templates
 
-**Endpoint:** `GET /api/simple-templates`
+**Endpoint:** `GET /api/templates`
 
 **Response:**
 ```json
@@ -212,52 +218,121 @@ The workflow engine provides async APIs for both direct workflow execution and t
 
 #### 2. Get Template Parameters
 
-**Endpoint:** `GET /api/simple-templates/{templateId}/parameters`
+**Endpoint:** `GET /api/templates/{templateId}/parameters`
 
 **Response:**
 ```json
-[
-  {
-    "name": "destination",
-    "description": "Where are you traveling to?",
-    "type": "LOCATION",
-    "required": true,
-    "defaultValue": null
-  },
-  {
-    "name": "startDate",
-    "description": "Departure date",
-    "type": "DATE",
-    "required": true,
-    "defaultValue": null
-  },
-  {
-    "name": "duration",
-    "description": "Number of days",
-    "type": "NUMBER",
-    "required": true,
-    "defaultValue": null
-  },
-  {
-    "name": "budget",
-    "description": "Total budget with currency",
-    "type": "CURRENCY",
-    "required": false,
-    "defaultValue": "1000 USD"
-  },
-  {
-    "name": "travelStyle",
-    "description": "Travel style preference",
-    "type": "SELECTION",
-    "required": false,
-    "defaultValue": "Mid-range"
-  }
-]
+{
+  "templateId": "550e8400-e29b-41d4-a716-446655440000",
+  "templateName": "Simple Trip Planner",
+  "parameters": [
+    {
+      "name": "destination",
+      "description": "Where are you traveling to?",
+      "type": "LOCATION",
+      "required": true,
+      "defaultValue": null,
+      "validation": [
+        {
+          "type": "PATTERN",
+          "value": "^[A-Za-z\\s,.-]+$",
+          "message": "Please enter a valid location name"
+        }
+      ],
+      "metadata": {
+        "placeholder": "Paris, France",
+        "helpText": "Where are you traveling to? (city and country recommended)",
+        "order": 1,
+        "group": "Location"
+      }
+    },
+    {
+      "name": "startDate",
+      "description": "Departure date",
+      "type": "DATE",
+      "required": true,
+      "defaultValue": null,
+      "validation": [
+        {
+          "type": "DATE_RANGE",
+          "value": "2024-01-01,2025-12-31",
+          "message": "Please select a date between 2024 and 2025"
+        }
+      ],
+      "metadata": {
+        "placeholder": "yyyy-MM-dd",
+        "helpText": "Departure date (format: yyyy-MM-dd, MM/dd/yyyy, or dd/MM/yyyy)",
+        "order": 2,
+        "group": "Dates"
+      }
+    },
+    {
+      "name": "duration",
+      "description": "Number of days",
+      "type": "NUMBER",
+      "required": true,
+      "defaultValue": null,
+      "validation": [
+        {
+          "type": "MIN_MAX",
+          "value": "1,365",
+          "message": "Duration must be between 1 and 365 days"
+        }
+      ],
+      "metadata": {
+        "placeholder": "Enter a number",
+        "helpText": "Number of days (numeric value)",
+        "order": 4,
+        "group": "Dates"
+      }
+    },
+    {
+      "name": "budget",
+      "description": "Total budget with currency",
+      "type": "CURRENCY",
+      "required": false,
+      "defaultValue": "1000 USD",
+      "validation": [
+        {
+          "type": "PATTERN",
+          "value": "^(\\d+(?:\\.\\d{2})?)\\s+(USD|EUR|GBP|JPY|CAD|AUD)$",
+          "message": "Please enter a valid currency format (e.g., 1000 USD)"
+        }
+      ],
+      "metadata": {
+        "placeholder": "1000 USD",
+        "helpText": "Total budget with currency (e.g., 1000 USD, EUR 500)",
+        "order": 5,
+        "group": "Budget"
+      }
+    },
+    {
+      "name": "travelStyle",
+      "description": "Travel style preference",
+      "type": "SELECTION",
+      "required": false,
+      "defaultValue": "Mid-range",
+      "validation": [
+        {
+          "type": "ALLOWED_VALUES",
+          "value": "Budget,Mid-range,Luxury",
+          "message": "Please select a valid travel style"
+        }
+      ],
+      "metadata": {
+        "placeholder": "Mid-range",
+        "helpText": "Travel style preference (choose from available options)",
+        "order": 6,
+        "group": "Preferences"
+      }
+    }
+  ]
+}
 ```
 
 #### 3. Execute Template
 
-**Endpoint:** `POST /api/simple-templates/{templateId}/execute`
+**Endpoint:** `POST /api/templates/{templateId}/execute`
 
 **Request Body:**
 ```json

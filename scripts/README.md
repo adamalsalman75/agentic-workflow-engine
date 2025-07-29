@@ -13,18 +13,7 @@ scripts/
 
 ## Local Development Scripts
 
-### `local/start-local.sh`
-Starts the Spring Boot application locally with proper environment setup.
-
-**Prerequisites:**
-- PostgreSQL running locally
-- Database `agentic_workflow` exists (script will create if missing)
-- `OPENAI_API_KEY` environment variable set
-
-**Usage:**
-```bash
-./scripts/local/start-local.sh
-```
+**Note:** The application is typically started through IntelliJ IDEA with OpenAI API key configured in the IDE environment.
 
 ### `local/test-basic-api.sh`
 Performs comprehensive health checks and workflow functionality tests with polling.
@@ -34,54 +23,21 @@ Performs comprehensive health checks and workflow functionality tests with polli
 - Complete workflow execution test with polling
 - Shows real-time status updates
 - Displays final results and task completion
-- Template system validation
+- Template system validation  
+- Story 2 advanced validation testing
 
 **Usage:**
 ```bash
-# Make sure application is running first
+# Make sure application is running first (via IntelliJ or ./mvnw spring-boot:run)
 ./scripts/local/test-basic-api.sh
 ```
 
-### `local/test-phase2-api.sh`
-Comprehensive testing of the Template System Phase 2 features including:
-- Template listing
-- Parameter discovery
-- Extended parameter types (DATE, CURRENCY, LOCATION)
-- Template execution
-
-**Usage:**
-```bash
-./scripts/local/test-phase2-api.sh
-```
 
 
 
 ## Kubernetes Scripts
 
-### `kubernetes/deploy-to-gke.sh`
-Complete deployment script for Google Kubernetes Engine (GKE).
-
-**Features:**
-- Builds and pushes Docker image to Google Container Registry
-- Creates Kubernetes manifests
-- Deploys application with proper resource limits
-- Sets up health checks and secrets
-
-**Prerequisites:**
-- `gcloud` CLI installed and authenticated
-- `kubectl` installed
-- Docker installed
-- GKE cluster created
-
-**Usage:**
-```bash
-# Set environment variables
-export PROJECT_ID="your-gcp-project"
-export CLUSTER_NAME="your-cluster"
-export ZONE="us-central1-a"
-
-./scripts/kubernetes/deploy-to-gke.sh
-```
+**Note:** Deployment to GKE is handled by GitHub Actions pipeline (`.github/workflows/deploy-to-gke.yml`).
 
 ### `kubernetes/test-k8s-comprehensive.sh`
 Comprehensive Kubernetes testing that combines API testing with workflow monitoring.
@@ -135,21 +91,17 @@ Checks the overall health and status of the Kubernetes deployment.
 
 ### Local Testing
 ```bash
-# 1. Start the application
-./scripts/local/start-local.sh
+# 1. Start the application (IntelliJ or Maven)
+# IntelliJ: Run AgenticWorkflowEngineApplication
+# OR Maven: ./mvnw spring-boot:run
 
-# 2. In another terminal, run basic tests
+# 2. Run basic tests
 ./scripts/local/test-basic-api.sh
-
-# 3. Run comprehensive template system tests
-./scripts/local/test-phase2-api.sh
 ```
 
 ### Kubernetes Testing
 ```bash
-# 1. Deploy to GKE
-./scripts/kubernetes/deploy-to-gke.sh
-
+# 1. Deploy via GitHub Actions (automatic on push to main)
 # 2. Run comprehensive tests
 ./scripts/kubernetes/test-k8s-comprehensive.sh
 ```
