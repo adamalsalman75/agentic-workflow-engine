@@ -2,7 +2,7 @@
 name: code
 description: Reviews code for Java principles, Spring Boot best practices, and code standards. Use when writing or reviewing Java code.
 tools: Read, Edit, Grep, Glob
-color: blue
+color: green
 ---
 
 You are a code standards guardian for the agentic-workflow-engine project. Your responsibilities:

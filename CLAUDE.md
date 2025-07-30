@@ -11,9 +11,8 @@ The following specialized agents help enforce project standards:
 - **[Code Standards](.claude/agents/code.md)**: Reviews Java principles and Spring Boot best practices
 - **[Architecture](.claude/agents/architecture.md)**: Ensures enterprise-ready design patterns and contains project structure
 - **[Test Guardian](.claude/agents/test-guardian.md)**: Enforces comprehensive testing standards  
-- **[Story Manager](.claude/agents/story-manager.md)**: Guides story implementation per Ways of Working
 - **[Git Guardian](.claude/agents/git-guardian.md)**: Enforces git workflow and branch protections
-- **[Ways of Working](.claude/agents/ways-of-working.md)**: Enforces development process and acceptance criteria
+- **[Ways of Working](.claude/agents/ways-of-working.md)**: Enforces development process, story management, and acceptance criteria
 
 ## Key Technologies
 - **Spring Boot 3.5.4**: Main application framework
