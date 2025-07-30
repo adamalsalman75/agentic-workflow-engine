@@ -80,14 +80,35 @@ TEMPLATES=$(curl -s --max-time 10 "${API_BASE}/api/templates")
 if [ $? -eq 0 ] && [ "$(echo $TEMPLATES | jq length)" -gt 0 ]; then
     echo "✅ Template system is working in Kubernetes"
     echo "Available templates: $(echo $TEMPLATES | jq -r '.[].name' | paste -sd, -)"
+    
+    # Test Story 5 - Verify all 5 production templates exist
+    echo ""
+    echo "2.1 Testing Story 5 - Production Templates:"
+    EXPECTED_TEMPLATES=("Business Startup Planner" "Event Organizer" "Research Project Planner" "Product Launch Checklist" "Home Renovation Planner")
+    MISSING_TEMPLATES=()
+    
+    for template in "${EXPECTED_TEMPLATES[@]}"; do
+        if echo "$TEMPLATES" | jq -e --arg name "$template" '.[] | select(.name == $name)' > /dev/null; then
+            echo "✅ Found: $template"
+        else
+            echo "❌ Missing: $template"
+            MISSING_TEMPLATES+=("$template")
+        fi
+    done
+    
+    if [ ${#MISSING_TEMPLATES[@]} -eq 0 ]; then
+        echo "✅ Story 5 verification complete - All 5 production templates found"
+    else
+        echo "❌ Story 5 verification failed - Missing templates: ${MISSING_TEMPLATES[*]}"
+    fi
 else
     echo "❌ Template system failed or no templates available"
     exit 1
 fi
 echo ""
 
-# Test Story 3 enhanced parameter discovery
-TEMPLATE_ID=$(echo "$TEMPLATES" | jq -r '.[0].id' 2>/dev/null | tr -d '\n')
+# Test Story 3 enhanced parameter discovery - use Business Startup Planner
+TEMPLATE_ID=$(echo "$TEMPLATES" | jq -r '.[] | select(.name == "Business Startup Planner") | .id' 2>/dev/null | tr -d '\n')
 echo "3. Testing Story 3 - Enhanced Parameter Discovery API:"
 PARAMS=$(curl -s --max-time 10 "${API_BASE}/api/templates/${TEMPLATE_ID}/parameters")
 
@@ -181,11 +202,13 @@ echo "5. Testing template execution with ID: $TEMPLATE_ID"
 TEMPLATE_EXECUTION=$(curl -s --max-time 30 -X POST "${API_BASE}/api/templates/${TEMPLATE_ID}/execute" \
     -H "Content-Type: application/json" \
     -d '{
-        "destination": "Tokyo, Japan",
-        "startDate": "2024-12-01",
-        "duration": "5",
-        "budget": "2000 USD",
-        "travelStyle": "Mid-range"
+        "business_name": "TestCorp",
+        "industry": "Technology",
+        "business_location": "San Francisco, CA", 
+        "team_size": "5",
+        "launch_date": "2025-06-01",
+        "business_email": "test@testcorp.com",
+        "business_model": "SaaS"
     }')
 
 if echo $TEMPLATE_EXECUTION | jq -e '.goalId' > /dev/null; then

@@ -28,7 +28,7 @@ You are the Ways of Working guardian for the agentic-workflow-engine project. Yo
 
 ### 4. Story Development & Testing
 - Validate that acceptance criteria are clearly understood before implementation
-- Create feature branch from `develop` branch for each story (naming: `feature/story-{number}-{description}`)
+- Create feature branch from `develop` branch for each story (naming: `feature/{descriptive-name}` - no GitHub issue references)
 - Implement story according to acceptance criteria
 - Enforce 70% minimum test coverage
 - Ensure all tests are written and passing

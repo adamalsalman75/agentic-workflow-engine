@@ -72,10 +72,11 @@ User Input → Template Parameter Validation → Query Generation → Existing W
    - Parameter definitions with types and validation
    - Prompt templates with placeholder substitution
 
-2. **Parameter System**
-   - Typed parameters (STRING, NUMBER, DATE, CURRENCY, LOCATION, SELECTION)
-   - Validation rules (required/optional, min/max, allowed values, patterns)
-   - Default values and constraints
+2. **Parameter System** *(Simplified for LLM Flexibility)*
+   - Core parameter types (TEXT, NUMBER, BOOLEAN, SELECTION)
+   - Basic validation (required/optional, allowed values for selections)
+   - Default values and user guidance through metadata
+   - **Design Philosophy**: Trust LLM's natural language processing capabilities over rigid validation
 
 3. **Template Execution Engine**
    - Parameter validation and merging with defaults
@@ -87,6 +88,35 @@ User Input → Template Parameter Validation → Query Generation → Existing W
    - Usage tracking and analytics
    - Version management and updates
 
+## Architectural Evolution: LLM-First Design
+
+### Key Insight: Over-Engineering for LLM Consumption
+During Phase 2 implementation, we discovered that our parameter validation system was over-engineered for LLM consumption. The initial approach included:
+
+**Complex System (Stories 1-5)**:
+- 13 parameter types: TEXT, NUMBER, SELECTION, DATE, CURRENCY, LOCATION, EMAIL, PHONE, URL, BOOLEAN, PERCENTAGE, TIME, DURATION
+- 4 validation rule types: PATTERN, RANGE, DATE_RANGE, ALLOWED_VALUES
+- Rigid format enforcement (e.g., exact email formats, currency parsing)
+
+**LLM Reality Check**:
+LLMs naturally handle flexible inputs and don't require strict validation:
+- ✅ "Send email to john.doe@company" vs ❌ requiring `john.doe@company.com`
+- ✅ "Budget is around $50k" vs ❌ requiring `50000 USD` format
+- ✅ "Launch sometime next summer" vs ❌ requiring `2025-06-15` format
+
+**Simplified Approach (Story 7)**:
+- 4 core parameter types: TEXT, NUMBER, BOOLEAN, SELECTION
+- 1 validation rule: ALLOWED_VALUES (for selections only)
+- Trust LLM's natural language processing capabilities
+- Focus on user guidance through rich metadata rather than rigid validation
+
+### Benefits of LLM-First Design
+- **Code Reduction**: ~70% less validation logic
+- **Better User Experience**: Accept natural language inputs
+- **Reduced Complexity**: Fewer failure points and edge cases
+- **Faster Development**: Simpler parameter system accelerates template creation
+- **AI Alignment**: System architecture matches AI capabilities
+
 ## Implementation Phases
 
 ### Phase 1: Foundation (MVP) 🎯 **Start Here**
@@ -95,7 +125,7 @@ User Input → Template Parameter Validation → Query Generation → Existing W
 
 **Scope**:
 - Simple template domain model (name, description, prompt template)
-- Basic parameter types (STRING, NUMBER, SELECTION)
+- Basic parameter types (TEXT, NUMBER, SELECTION)
 - Single hardcoded template for validation
 - REST API for template execution
 - Integration with existing WorkflowOrchestrator
@@ -117,53 +147,33 @@ User Input → Template Parameter Validation → Query Generation → Existing W
 
 ### Phase 2: Core Parameter System
 
-**Goal**: Robust parameter handling with validation and user experience
+**Goal**: LLM-optimized parameter handling with user experience focus
 
 **Scope**:
-- Full parameter type system (DATE, CURRENCY, LOCATION, etc.)
-- Advanced validation (min/max, patterns, allowed values)
+- Simplified parameter types (TEXT, NUMBER, BOOLEAN, SELECTION) optimized for LLM consumption
+- Basic validation focused on required/optional and selection constraints
+- Rich metadata system for user guidance (placeholders, help text, grouping)
 - Parameter discovery API for UI builders
-- Multiple templates across different categories
+- Multiple production templates across different categories
 
 **Success Criteria**:
-- 5 production-quality templates
-- Parameter validation with helpful error messages
+- 5 production-quality templates with flexible LLM-friendly parameters
+- User-friendly metadata and guidance without rigid validation
 - Template search and categorization
 - Frontend can dynamically generate forms from parameter definitions
+- LLM can process natural language inputs effectively
 
 **Technical Tasks**:
-1. Implement all parameter types with validation
-2. Add template search and filtering
-3. Create parameter discovery endpoints
-4. Build 5 comprehensive templates
-5. Add template categorization
+1. ✅ Implement comprehensive parameter types with validation *(Completed - Story 1-5)*
+2. 🔄 **Simplify parameter system for LLM flexibility** *(Story 7 - High Priority)*
+3. Add template search and filtering *(Story 6)*
+4. ✅ Build 5 comprehensive templates *(Completed - Story 5)*
+5. Add template categorization *(Story 6)*
 
-**Estimated Effort**: 3-4 days
+**Estimated Effort**: 2-3 days *(Reduced due to simplified approach)*
 
-### Phase 3: Template Management
+**⚠️ Architectural Insight**: Initial implementation used complex validation (13 parameter types, 4 validation rules) which is over-engineered for LLM consumption. Story 7 simplifies this approach to align with LLM capabilities.
 
-**Goal**: Template lifecycle and administrative capabilities
-
-**Scope**:
-- Template creation and editing APIs
-- Template versioning and updates
-- Usage analytics and tracking
-- Template permissions and visibility
-
-**Success Criteria**:
-- API for creating/updating templates
-- Template usage metrics
-- Admin interface for template management
-- Template execution history
-
-**Technical Tasks**:
-1. Add template CRUD operations
-2. Implement execution tracking
-3. Add usage analytics
-4. Build template administration endpoints
-5. Add template validation and testing
-
-**Estimated Effort**: 2-3 days
 
 ## Database Design
 
@@ -194,17 +204,6 @@ CREATE TABLE template_parameters (
 );
 ```
 
-**Phase 3**: Add execution tracking
-```sql
-CREATE TABLE template_executions (
-    id UUID PRIMARY KEY,
-    template_id UUID REFERENCES workflow_templates(id),
-    goal_id UUID REFERENCES goals(id),
-    parameters JSONB NOT NULL,
-    user_id VARCHAR(255),
-    executed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
 
 ## API Design
 
@@ -221,12 +220,6 @@ POST /api/workflow/templates/{id}/validate
 POST /api/workflow/templates/{id}/execute
 ```
 
-### Template Management (Later Phases)
-```
-POST /api/workflow/templates
-PUT /api/workflow/templates/{id}
-DELETE /api/workflow/templates/{id}
-```
 
 ## Success Metrics
 
@@ -276,6 +269,13 @@ DELETE /api/workflow/templates/{id}
 
 ## Future Enhancements
 
+### Template Management (Previously Phase 3)
+- Template creation and editing APIs
+- Template versioning and updates
+- Usage analytics and tracking
+- Template permissions and visibility
+- Template execution history
+
 ### Advanced Templates
 - Multi-step templates with conditional logic
 - Template composition and inheritance
@@ -293,6 +293,6 @@ DELETE /api/workflow/templates/{id}
 
 ## Conclusion
 
-The Template System represents a strategic evolution from a powerful generic engine to a user-friendly platform that delivers immediate value. By implementing in incremental phases, we can validate the approach, gather user feedback, and build sustainable momentum toward a comprehensive template ecosystem.
+The Template System represents a strategic evolution from a powerful generic engine to a user-friendly platform that delivers immediate value. By implementing Phase 1 (Foundation) and Phase 2 (Core Parameter System), we achieve a complete and valuable template system that provides sophisticated workflow templates with robust parameter validation.
 
-**Recommendation**: Proceed with Phase 1 implementation to validate core concepts before committing to full system development.
+**Recommendation**: Implement Phase 1 and Phase 2 to deliver a comprehensive template system. Phase 3 (Template Management) has been removed from scope as the core functionality provides sufficient value without the additional complexity of dynamic template creation and administration.

@@ -75,11 +75,15 @@ public record ParameterValidationRule(
                 (String) ruleMap.get("pattern"),
                 errorMessage
             );
-            case "RANGE" -> ValidationRule.range(
-                new BigDecimal(ruleMap.get("min").toString()),
-                new BigDecimal(ruleMap.get("max").toString()),
-                errorMessage
-            );
+            case "RANGE" -> {
+                BigDecimal min = ruleMap.get("min") != null 
+                    ? new BigDecimal(ruleMap.get("min").toString()) 
+                    : null;
+                BigDecimal max = ruleMap.get("max") != null 
+                    ? new BigDecimal(ruleMap.get("max").toString()) 
+                    : null;
+                yield ValidationRule.range(min, max, errorMessage);
+            }
             case "DATE_RANGE" -> {
                 LocalDate min = ruleMap.get("min") != null 
                     ? LocalDate.parse(ruleMap.get("min").toString()) 

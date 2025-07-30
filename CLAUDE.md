@@ -21,6 +21,21 @@ The following specialized agents help enforce project standards:
 - **Maven**: Build tool and dependency management
 - **JUnit 5**: Testing framework
 
+## Prerequisites
+
+### Database Setup
+PostgreSQL database must be running for all development work:
+```bash
+# Start PostgreSQL database
+docker compose up -d postgres
+
+# Verify database is healthy
+docker compose ps
+
+# Stop database (when development session complete)
+docker compose down
+```
+
 ## Common Commands
 
 ### Testing (Run before handoff)
