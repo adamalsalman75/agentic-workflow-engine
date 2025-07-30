@@ -57,10 +57,7 @@ public class TemplateService {
         return parameterPersistenceService.loadTemplateParameters(templateId);
     }
     
-    public WorkflowResult executeTemplate(UUID templateId, Map<String, Object> parameters) {
-        log.info("Executing template {} with parameters: {}", templateId, parameters);
-        
-        WorkflowTemplate template = getTemplate(templateId);
+    public void validateParameters(UUID templateId, Map<String, Object> parameters) {
         List<Parameter> templateParams = getTemplateParameters(templateId);
         
         // Validate all parameters
@@ -85,6 +82,15 @@ public class TemplateService {
         if (!validationErrors.isEmpty()) {
             throw new IllegalArgumentException("Parameter validation failed: " + String.join("; ", validationErrors));
         }
+    }
+    
+    public WorkflowResult executeTemplate(UUID templateId, Map<String, Object> parameters) {
+        log.info("Executing template {} with parameters: {}", templateId, parameters);
+        
+        WorkflowTemplate template = getTemplate(templateId);
+        
+        // Validate parameters
+        validateParameters(templateId, parameters);
         
         // Render prompt with parameters
         String renderedPrompt = renderPrompt(template.promptTemplate(), parameters);

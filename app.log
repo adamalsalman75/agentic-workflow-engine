@@ -1,0 +1,95 @@
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::staticFieldBase has been called by com.google.inject.internal.aop.HiddenClassDefiner (file:/Users/adam/.m2/wrapper/dists/apache-maven-3.9.11/a2d47e15/lib/guice-5.1.0-classes.jar)
+WARNING: Please consider reporting this to the maintainers of class com.google.inject.internal.aop.HiddenClassDefiner
+WARNING: sun.misc.Unsafe::staticFieldBase will be removed in a future release
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------< dev.alsalman:agentic-workflow-engine >----------------
+[INFO] Building agentic-workflow-engine 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.5.4:run (default-cli) > test-compile @ agentic-workflow-engine >>>
+[INFO] 
+[INFO] --- jacoco:0.8.13:prepare-agent (default) @ agentic-workflow-engine ---
+[INFO] argLine set to -javaagent:/Users/adam/.m2/repository/org/jacoco/org.jacoco.agent/0.8.13/org.jacoco.agent-0.8.13-runtime.jar=destfile=/Users/adam/projects/agentic-workflow-engine/target/jacoco.exec
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ agentic-workflow-engine ---
+[INFO] Copying 2 resources from src/main/resources to target/classes
+[INFO] Copying 2 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ agentic-workflow-engine ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ agentic-workflow-engine ---
+[INFO] skip non existing resourceDirectory /Users/adam/projects/agentic-workflow-engine/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ agentic-workflow-engine ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] <<< spring-boot:3.5.4:run (default-cli) < test-compile @ agentic-workflow-engine <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.5.4:run (default-cli) @ agentic-workflow-engine ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.4)
+
+2025-07-30T19:30:21.091+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] d.a.a.AgenticWorkflowEngineApplication   : Starting AgenticWorkflowEngineApplication using Java 24.0.1 with PID 52521 (/Users/adam/projects/agentic-workflow-engine/target/classes started by adam in /Users/adam/projects/agentic-workflow-engine)
+2025-07-30T19:30:21.092+01:00 DEBUG 52521 --- [agentic-workflow-engine] [           main] d.a.a.AgenticWorkflowEngineApplication   : Running with Spring Boot v3.5.4, Spring v6.2.9
+2025-07-30T19:30:21.092+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] d.a.a.AgenticWorkflowEngineApplication   : No active profile set, falling back to 1 default profile: "default"
+2025-07-30T19:30:21.477+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JDBC repositories in DEFAULT mode.
+2025-07-30T19:30:21.535+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 55 ms. Found 7 JDBC repository interfaces.
+2025-07-30T19:30:21.681+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-07-30T19:30:21.688+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-07-30T19:30:21.688+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.43]
+2025-07-30T19:30:21.705+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-07-30T19:30:21.705+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 595 ms
+2025-07-30T19:30:21.990+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-07-30T19:30:22.058+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@5310e451
+2025-07-30T19:30:22.058+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-07-30T19:30:22.069+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:5432/agentic_workflow (PostgreSQL 16.9)
+2025-07-30T19:30:22.092+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 2 migrations (execution time 00:00.011s)
+2025-07-30T19:30:22.117+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": 2
+2025-07-30T19:30:22.118+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] o.f.core.internal.command.DbMigrate      : Schema "public" is up to date. No migration necessary.
+2025-07-30T19:30:22.418+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 5 endpoints beneath base path '/actuator'
+2025-07-30T19:30:22.442+01:00  WARN 52521 --- [agentic-workflow-engine] [           main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
+2025-07-30T19:30:22.444+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-07-30T19:30:22.448+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2025-07-30T19:30:22.458+01:00  INFO 52521 --- [agentic-workflow-engine] [           main] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-07-30T19:30:22.463+01:00 ERROR 52521 --- [agentic-workflow-engine] [           main] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8080 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8080 or configure this application to listen on another port.
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  2.729 s
+[INFO] Finished at: 2025-07-30T19:30:22+01:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.5.4:run (default-cli) on project agentic-workflow-engine: Process terminated with exit code: 1 -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException

@@ -85,10 +85,31 @@ if [ $? -eq 0 ] && [ "$(echo $TEMPLATES | jq length)" -gt 0 ]; then
     echo "✅ Template system is working"
     echo "Available templates: $(echo $TEMPLATES | jq -r '.[].name' | paste -sd, -)"
     
-    # Test Story 3 enhanced parameter discovery  
-    TEMPLATE_ID=$(echo "$TEMPLATES" | jq -r '.[0].id' 2>/dev/null | tr -d '\n')
+    # Test Story 5 - Verify all 5 production templates exist
     echo ""
-    echo "4. Testing Story 3 - Enhanced Parameter Discovery API:"
+    echo "4. Testing Story 5 - Production Templates:"
+    EXPECTED_TEMPLATES=("Business Startup Planner" "Event Organizer" "Research Project Planner" "Product Launch Checklist" "Home Renovation Planner")
+    MISSING_TEMPLATES=()
+    
+    for template in "${EXPECTED_TEMPLATES[@]}"; do
+        if echo "$TEMPLATES" | jq -e --arg name "$template" '.[] | select(.name == $name)' > /dev/null; then
+            echo "✅ Found: $template"
+        else
+            echo "❌ Missing: $template"
+            MISSING_TEMPLATES+=("$template")
+        fi
+    done
+    
+    if [ ${#MISSING_TEMPLATES[@]} -eq 0 ]; then
+        echo "✅ Story 5 verification complete - All 5 production templates found"
+    else
+        echo "❌ Story 5 verification failed - Missing templates: ${MISSING_TEMPLATES[*]}"
+    fi
+    
+    # Test Story 3 enhanced parameter discovery - use Business Startup Planner
+    TEMPLATE_ID=$(echo "$TEMPLATES" | jq -r '.[] | select(.name == "Business Startup Planner") | .id' 2>/dev/null | tr -d '\n')
+    echo ""
+    echo "5. Testing Story 3 - Enhanced Parameter Discovery API:"
     PARAMS=$(curl -s "${API_BASE}/api/templates/${TEMPLATE_ID}/parameters")
     
     if [ $? -eq 0 ] && echo "$PARAMS" | jq -e '.parameters' > /dev/null; then
@@ -139,9 +160,13 @@ if [ $? -eq 0 ] && [ "$(echo $TEMPLATES | jq length)" -gt 0 ]; then
     VALIDATION_TEST=$(curl -s -X POST "${API_BASE}/api/templates/${TEMPLATE_ID}/execute" \
         -H "Content-Type: application/json" \
         -d '{
-            "destination": "Test City",
-            "startDate": "2023-01-01",
-            "duration": "1000"
+            "business_name": "TestCorp",
+            "industry": "Technology", 
+            "business_location": "San Francisco, CA",
+            "team_size": "5",
+            "launch_date": "2025-06-01",
+            "business_email": "test@testcorp.com",
+            "business_model": "SaaS"
         }')
     
     if echo "$VALIDATION_TEST" | jq -e '.success == false' > /dev/null; then
