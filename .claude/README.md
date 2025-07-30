@@ -60,11 +60,19 @@ These agents will automatically activate when their trigger words are detected i
 
 ## Configuration
 
-The agents are configured in `agents.json` with:
-- `auto_invoke_enabled`: true (automatic activation)
-- `require_confirmation`: false (seamless integration)
-- `show_agent_thinking`: false (clean output)
-- `parallel_execution`: true (efficient processing)
+The agents are configured as individual Markdown files in the `.claude/agents/` directory with YAML frontmatter:
+
+```yaml
+---
+name: agent-name
+description: Agent purpose
+auto_invoke:
+  - trigger1
+  - trigger2
+---
+```
+
+Each agent activates automatically when their trigger patterns are detected in the conversation.
 
 ## Benefits
 

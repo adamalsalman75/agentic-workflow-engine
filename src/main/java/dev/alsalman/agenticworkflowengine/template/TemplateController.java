@@ -5,6 +5,7 @@ import dev.alsalman.agenticworkflowengine.template.domain.WorkflowTemplate;
 import dev.alsalman.agenticworkflowengine.workflow.domain.WorkflowResult;
 import dev.alsalman.agenticworkflowengine.template.TemplateService;
 import dev.alsalman.agenticworkflowengine.template.dto.ParameterDiscoveryResponseDto;
+import dev.alsalman.agenticworkflowengine.template.service.ParameterPersistenceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +23,12 @@ public class TemplateController {
     private static final Logger log = LoggerFactory.getLogger(TemplateController.class);
     
     private final TemplateService templateService;
+    private final ParameterPersistenceService parameterPersistenceService;
     
-    public TemplateController(TemplateService templateService) {
+    public TemplateController(TemplateService templateService, 
+                            ParameterPersistenceService parameterPersistenceService) {
         this.templateService = templateService;
+        this.parameterPersistenceService = parameterPersistenceService;
     }
     
     @GetMapping
@@ -50,12 +54,12 @@ public class TemplateController {
         log.info("Getting parameters for template: {}", templateId);
         try {
             WorkflowTemplate template = templateService.getTemplate(templateId);
-            List<Parameter> parameters = templateService.getTemplateParameters(templateId);
+            var parametersWithMetadata = parameterPersistenceService.loadParametersWithMetadata(templateId);
             
-            ParameterDiscoveryResponseDto response = ParameterDiscoveryResponseDto.create(
+            ParameterDiscoveryResponseDto response = new ParameterDiscoveryResponseDto(
                 templateId, 
                 template.name(), 
-                parameters
+                parametersWithMetadata
             );
             
             return ResponseEntity.ok(response);

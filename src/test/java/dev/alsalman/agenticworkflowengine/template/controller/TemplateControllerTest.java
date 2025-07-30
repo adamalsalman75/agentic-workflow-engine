@@ -9,6 +9,8 @@ import dev.alsalman.agenticworkflowengine.workflow.domain.Goal;
 import dev.alsalman.agenticworkflowengine.workflow.domain.GoalStatus;
 import dev.alsalman.agenticworkflowengine.workflow.domain.WorkflowResult;
 import dev.alsalman.agenticworkflowengine.template.dto.ParameterDiscoveryResponseDto;
+import dev.alsalman.agenticworkflowengine.template.dto.ParameterResponseDto;
+import dev.alsalman.agenticworkflowengine.template.service.ParameterPersistenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +35,9 @@ class TemplateControllerTest {
 
     @Mock
     private TemplateService templateService;
+    
+    @Mock
+    private ParameterPersistenceService parameterPersistenceService;
 
     @InjectMocks
     private TemplateController controller;
@@ -53,7 +58,7 @@ class TemplateControllerTest {
         );
         
         parameters = List.of(
-            Parameter.required("param1", "Test parameter", ParameterType.STRING),
+            Parameter.required("param1", "Test parameter", ParameterType.TEXT),
             Parameter.optional("param2", "Optional parameter", ParameterType.NUMBER, "10")
         );
     }
@@ -104,7 +109,12 @@ class TemplateControllerTest {
     void getTemplateParameters_WithValidId_ShouldReturnParameters() {
         // Given
         when(templateService.getTemplate(templateId)).thenReturn(template);
-        when(templateService.getTemplateParameters(templateId)).thenReturn(parameters);
+        // Mock ParameterResponseDto objects for the new controller implementation
+        List<ParameterResponseDto> mockParameterResponses = List.of(
+            new ParameterResponseDto("param1", "Test parameter", ParameterType.TEXT, true, null, List.of(), null),
+            new ParameterResponseDto("param2", "Optional parameter", ParameterType.NUMBER, false, "10", List.of(), null)
+        );
+        when(parameterPersistenceService.loadParametersWithMetadata(templateId)).thenReturn(mockParameterResponses);
 
         // When
         ResponseEntity<ParameterDiscoveryResponseDto> response = controller.getTemplateParameters(templateId);

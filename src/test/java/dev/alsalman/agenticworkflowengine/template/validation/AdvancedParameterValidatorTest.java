@@ -30,7 +30,7 @@ class AdvancedParameterValidatorTest {
             // Given
             var rule = ValidationRule.pattern("^[A-Z]{3}$", "Must be 3 uppercase letters");
             var parameter = Parameter.requiredWithValidation(
-                "airportCode", "Airport code", ParameterType.STRING, List.of(rule)
+                "airportCode", "Airport code", ParameterType.TEXT, List.of(rule)
             );
             
             // Basic validation will pass for valid string
@@ -47,7 +47,7 @@ class AdvancedParameterValidatorTest {
             // Given
             var rule = ValidationRule.pattern("^[A-Z]{3}$", "Must be 3 uppercase letters");
             var parameter = Parameter.requiredWithValidation(
-                "airportCode", "Airport code", ParameterType.STRING, List.of(rule)
+                "airportCode", "Airport code", ParameterType.TEXT, List.of(rule)
             );
             
             // Basic validation will pass for valid string
@@ -64,7 +64,7 @@ class AdvancedParameterValidatorTest {
             // Given
             var rule = ValidationRule.pattern("^[A-Z]{3}$", null);
             var parameter = Parameter.requiredWithValidation(
-                "code", "Code", ParameterType.STRING, List.of(rule)
+                "code", "Code", ParameterType.TEXT, List.of(rule)
             );
             
             // Basic validation will pass for valid string
@@ -314,7 +314,7 @@ class AdvancedParameterValidatorTest {
                 )
             );
             var parameter = Parameter.requiredWithValidation(
-                "code", "Numeric code", ParameterType.STRING, rules
+                "code", "Numeric code", ParameterType.TEXT, rules
             );
             
             // Basic validation will pass
@@ -334,7 +334,7 @@ class AdvancedParameterValidatorTest {
                 ValidationRule.pattern("^.{3}$", "Must be exactly 3 characters")
             );
             var parameter = Parameter.requiredWithValidation(
-                "code", "Code", ParameterType.STRING, rules
+                "code", "Code", ParameterType.TEXT, rules
             );
             
             // Basic validation will pass
@@ -357,7 +357,7 @@ class AdvancedParameterValidatorTest {
         @Test
         void shouldReturnBasicValidationErrorsWhenBasicValidationFails() {
             // Given
-            var parameter = Parameter.required("name", "Name", ParameterType.STRING);
+            var parameter = Parameter.required("name", "Name", ParameterType.TEXT);
             
             // When passing null to a required parameter
             List<String> errors = validator.validateParameter(parameter, null);
@@ -371,7 +371,7 @@ class AdvancedParameterValidatorTest {
             // Given
             var rule = ValidationRule.pattern("^[A-Z]+$", "Must be uppercase");
             var parameter = Parameter.requiredWithValidation(
-                "code", "Code", ParameterType.STRING, List.of(rule)
+                "code", "Code", ParameterType.TEXT, List.of(rule)
             );
             
             // When passing null to a required parameter
@@ -390,7 +390,7 @@ class AdvancedParameterValidatorTest {
         @Test
         void shouldHandleEmptyValidationRulesList() {
             // Given
-            var parameter = Parameter.required("field", "Field", ParameterType.STRING);
+            var parameter = Parameter.required("field", "Field", ParameterType.TEXT);
             
             // Basic validation will pass
             
@@ -406,7 +406,7 @@ class AdvancedParameterValidatorTest {
             // Given
             var rule = ValidationRule.pattern("^[A-Z]+$", "Must be uppercase");
             var parameter = Parameter.optionalWithValidation(
-                "optionalCode", "Optional code", ParameterType.STRING, null, List.of(rule)
+                "optionalCode", "Optional code", ParameterType.TEXT, null, List.of(rule)
             );
             
             // Basic validation will pass
@@ -423,7 +423,7 @@ class AdvancedParameterValidatorTest {
             // Given
             var rule = ValidationRule.pattern("[", "Invalid pattern");  // Invalid regex
             var parameter = Parameter.requiredWithValidation(
-                "field", "Field", ParameterType.STRING, List.of(rule)
+                "field", "Field", ParameterType.TEXT, List.of(rule)
             );
             
             // Basic validation will pass
