@@ -68,12 +68,30 @@ This is a Spring Boot application built with Java 24 that integrates Spring AI w
    - Merge `develop` to `main` branch
    - Deploy to GKE production environment
 
+### Acceptance Criteria Guidelines
+- **Focus on OUTCOMES, not implementation details**
+- **Use business language, not technical jargon**
+- **Define measurable success criteria**
+- **Avoid specifying specific technologies unless absolutely required**
+
+**❌ Poor A/C (too technical):**
+- "Use PostgreSQL with JSONB for flexible metadata storage"
+- "Create two database indexes for performance"
+- "Develop domain model `TemplateParameter`"
+
+**✅ Good A/C (outcome-focused):**
+- "Template parameters can be dynamically configured without code changes"
+- "Parameter validation rules can be modified through the UI"
+- "System supports at least 100 templates with 10 parameters each with sub-second response times"
+
 ### Definition of Done (Each Story)
+- [ ] **Acceptance criteria validated** - Each A/C is outcome-focused and measurable
 - [ ] Feature implemented according to acceptance criteria
 - [ ] Unit tests written and passing
 - [ ] Integration tests updated if needed
 - [ ] Manual testing completed
 - [ ] No breaking changes to existing functionality
+- [ ] **Technical decisions documented** - Any deviations from original technical approach explained
 - [ ] PR created and reviewed
 - [ ] PR merged to `develop` branch
 - [ ] Story closed on GitHub with detailed completion comment including:
@@ -82,6 +100,7 @@ This is a Spring Boot application built with Java 24 that integrates Spring AI w
   - Technical changes made (files, classes, endpoints)
   - Test coverage added
   - Any architectural decisions or trade-offs
+  - **Explanation of any deviations from original technical approach**
 - [ ] Documentation updated (CLAUDE.md, README.md) if needed
 
 ### Definition of Done (Each Epic/PRD)

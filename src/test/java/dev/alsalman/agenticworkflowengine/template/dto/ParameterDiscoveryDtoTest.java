@@ -108,7 +108,7 @@ class ParameterDiscoveryDtoTest {
     void parameterMetadataDto_ShouldHandleAllParameterTypes() {
         // Test different parameter types get correct placeholders
         assertThat(ParameterMetadataDto.defaultForParameter(
-            Parameter.required("name", "Name", ParameterType.STRING)
+            Parameter.required("name", "Name", ParameterType.TEXT)
         ).placeholder()).isEqualTo("Enter name");
         
         assertThat(ParameterMetadataDto.defaultForParameter(

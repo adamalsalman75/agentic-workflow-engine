@@ -23,10 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @TestPropertySource(properties = {
-    "spring.sql.init.mode=always",
-    "spring.datasource.url=jdbc:postgresql://localhost:5432/agentic_workflow",
-    "spring.datasource.username=postgres",
-    "spring.datasource.password=password"
+    "spring.flyway.enabled=true",
+    "spring.flyway.clean-disabled=false"
 })
 @Transactional
 class WorkflowPersistenceServiceTest {

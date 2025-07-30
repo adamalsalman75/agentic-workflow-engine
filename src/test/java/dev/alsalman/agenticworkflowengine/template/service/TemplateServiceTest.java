@@ -5,10 +5,12 @@ import dev.alsalman.agenticworkflowengine.workflow.WorkflowOrchestrator;
 import dev.alsalman.agenticworkflowengine.template.TemplateService;
 import dev.alsalman.agenticworkflowengine.workflow.domain.GoalStatus;
 import dev.alsalman.agenticworkflowengine.template.domain.Parameter;
+import dev.alsalman.agenticworkflowengine.template.domain.ParameterType;
 import dev.alsalman.agenticworkflowengine.template.domain.WorkflowTemplate;
 import dev.alsalman.agenticworkflowengine.workflow.domain.WorkflowResult;
 import dev.alsalman.agenticworkflowengine.template.repository.TemplateRepository;
 import dev.alsalman.agenticworkflowengine.template.validation.AdvancedParameterValidator;
+import dev.alsalman.agenticworkflowengine.template.service.ParameterPersistenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,6 +44,9 @@ class TemplateServiceTest {
     @Mock
     private AdvancedParameterValidator advancedValidator;
     
+    @Mock
+    private ParameterPersistenceService parameterPersistenceService;
+    
     @InjectMocks
     private TemplateService templateService;
     
@@ -61,6 +66,16 @@ class TemplateServiceTest {
         
         // Mock advanced validator to return no errors by default (lenient for flexible use)
         lenient().when(advancedValidator.validateParameter(any(), anyString())).thenReturn(List.of());
+        
+        // Mock parameter persistence service to return basic parameters
+        List<Parameter> mockParameters = List.of(
+            Parameter.required("destination", "Travel destination", ParameterType.LOCATION),
+            Parameter.required("startDate", "Start date", ParameterType.DATE),
+            Parameter.required("duration", "Duration in days", ParameterType.NUMBER),
+            Parameter.optional("budget", "Travel budget", ParameterType.CURRENCY, "1000 USD"),
+            Parameter.optional("travelStyle", "Travel style", ParameterType.SELECTION, "Mid-range")
+        );
+        lenient().when(parameterPersistenceService.loadTemplateParameters(any())).thenReturn(mockParameters);
     }
     
     @Test
