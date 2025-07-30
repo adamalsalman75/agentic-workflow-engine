@@ -6,16 +6,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * Database entity for parameter validation rules
+ * Database entity for parameter validation rules - simplified for LLM flexibility
  */
 @Table("parameter_validation_rules")
 public record ParameterValidationRule(
@@ -65,56 +62,27 @@ public record ParameterValidationRule(
     }
     
     /**
-     * Convert database entity to domain ValidationRule
+     * Convert database entity to domain ValidationRule - simplified for LLM flexibility
      */
     public ValidationRule toDomainValidationRule() {
         Map<String, Object> ruleMap = getRuleValueAsMap();
         
         return switch (validationType) {
-            case "PATTERN" -> ValidationRule.pattern(
-                (String) ruleMap.get("pattern"),
-                errorMessage
-            );
-            case "RANGE" -> {
-                BigDecimal min = ruleMap.get("min") != null 
-                    ? new BigDecimal(ruleMap.get("min").toString()) 
-                    : null;
-                BigDecimal max = ruleMap.get("max") != null 
-                    ? new BigDecimal(ruleMap.get("max").toString()) 
-                    : null;
-                yield ValidationRule.range(min, max, errorMessage);
-            }
-            case "DATE_RANGE" -> {
-                LocalDate min = ruleMap.get("min") != null 
-                    ? LocalDate.parse(ruleMap.get("min").toString()) 
-                    : null;
-                LocalDate max = ruleMap.get("max") != null 
-                    ? LocalDate.parse(ruleMap.get("max").toString()) 
-                    : null;
-                yield ValidationRule.dateRange(min, max, errorMessage);
-            }
             case "ALLOWED_VALUES" -> {
                 @SuppressWarnings("unchecked")
                 List<String> values = (List<String>) ruleMap.get("values");
                 yield ValidationRule.allowedValues(values, errorMessage);
             }
+            case "REQUIRED" -> ValidationRule.required(errorMessage);
             default -> throw new IllegalArgumentException("Unknown validation type: " + validationType);
         };
     }
     
     /**
-     * Create from domain ValidationRule
+     * Create from domain ValidationRule - simplified for LLM flexibility
      */
     public static ParameterValidationRule fromDomainValidationRule(UUID parameterId, ValidationRule rule) {
         Map<String, Object> ruleValueMap = switch (rule.type()) {
-            case PATTERN -> Map.of("pattern", rule.pattern());
-            case RANGE -> Map.of("min", rule.minValue(), "max", rule.maxValue());
-            case DATE_RANGE -> {
-                var map = new java.util.HashMap<String, Object>();
-                if (rule.minDate() != null) map.put("min", rule.minDate().toString());
-                if (rule.maxDate() != null) map.put("max", rule.maxDate().toString());
-                yield map;
-            }
             case ALLOWED_VALUES -> Map.of("values", rule.allowedValues());
             case REQUIRED -> Map.of(); // No additional data needed for required validation
         };

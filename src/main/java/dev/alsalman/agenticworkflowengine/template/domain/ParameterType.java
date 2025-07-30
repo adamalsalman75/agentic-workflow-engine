@@ -1,23 +1,13 @@
 package dev.alsalman.agenticworkflowengine.template.domain;
 
 /**
- * Parameter types for template execution
- * Phase 1: TEXT, NUMBER, SELECTION
- * Phase 2: DATE, CURRENCY, LOCATION
- * Phase 3: BOOLEAN, EMAIL, URL, PERCENTAGE, PHONE, TIME, DURATION
+ * Simplified parameter types optimized for LLM consumption.
+ * LLMs can naturally handle flexible inputs, so we focus on 4 core types
+ * that provide clear user guidance while trusting LLM flexibility.
  */
 public enum ParameterType {
-    TEXT,       // Changed from STRING for consistency
-    NUMBER,
-    SELECTION,
-    DATE,
-    CURRENCY,
-    LOCATION,
-    BOOLEAN,
-    EMAIL,
-    URL,
-    PERCENTAGE,
-    PHONE,
-    TIME,
-    DURATION
+    TEXT,        // Free text input - LLMs handle emails, dates, locations naturally
+    NUMBER,      // Numeric values - LLMs parse currencies, percentages, durations
+    BOOLEAN,     // True/false values
+    SELECTION    // Multiple choice from predefined options
 }
