@@ -66,12 +66,19 @@ public class ParameterValidator {
         }
         
         return switch (parameter.type()) {
-            case STRING -> validateString(parameter, value.toString());
+            case TEXT -> validateString(parameter, value.toString());
             case NUMBER -> validateNumber(parameter, value);
             case SELECTION -> validateSelection(parameter, value.toString());
             case DATE -> validateDate(parameter, value.toString());
             case CURRENCY -> validateCurrency(parameter, value.toString());
             case LOCATION -> validateLocation(parameter, value.toString());
+            case BOOLEAN -> validateBoolean(parameter, value.toString());
+            case EMAIL -> validateEmail(parameter, value.toString());
+            case URL -> validateUrl(parameter, value.toString());
+            case PERCENTAGE -> validatePercentage(parameter, value.toString());
+            case PHONE -> validatePhone(parameter, value.toString());
+            case TIME -> validateTime(parameter, value.toString());
+            case DURATION -> validateDuration(parameter, value.toString());
         };
     }
     
@@ -188,5 +195,71 @@ public class ParameterValidator {
         }
         
         return ValidationResult.success();
+    }
+    
+    private static ValidationResult validateBoolean(Parameter parameter, String value) {
+        String lowerValue = value.trim().toLowerCase();
+        if (lowerValue.equals("true") || lowerValue.equals("false") || 
+            lowerValue.equals("yes") || lowerValue.equals("no") ||
+            lowerValue.equals("1") || lowerValue.equals("0")) {
+            return ValidationResult.success();
+        }
+        return ValidationResult.failure("Parameter '" + parameter.name() + "' must be true/false, yes/no, or 1/0");
+    }
+    
+    private static ValidationResult validateEmail(Parameter parameter, String value) {
+        String emailRegex = "^[\\w.-]+@[\\w.-]+\\.\\w+$";
+        if (value.matches(emailRegex)) {
+            return ValidationResult.success();
+        }
+        return ValidationResult.failure("Parameter '" + parameter.name() + "' must be a valid email address");
+    }
+    
+    private static ValidationResult validateUrl(Parameter parameter, String value) {
+        try {
+            new java.net.URL(value);
+            return ValidationResult.success();
+        } catch (java.net.MalformedURLException e) {
+            return ValidationResult.failure("Parameter '" + parameter.name() + "' must be a valid URL");
+        }
+    }
+    
+    private static ValidationResult validatePercentage(Parameter parameter, String value) {
+        try {
+            double percent = Double.parseDouble(value);
+            if (percent >= 0 && percent <= 100) {
+                return ValidationResult.success();
+            }
+            return ValidationResult.failure("Parameter '" + parameter.name() + "' must be between 0 and 100");
+        } catch (NumberFormatException e) {
+            return ValidationResult.failure("Parameter '" + parameter.name() + "' must be a valid percentage");
+        }
+    }
+    
+    private static ValidationResult validatePhone(Parameter parameter, String value) {
+        // Basic phone validation - allows digits, spaces, dashes, parentheses, plus
+        String phoneRegex = "^[\\+]?[\\d\\s\\-\\(\\)]+$";
+        if (value.matches(phoneRegex) && value.replaceAll("[^\\d]", "").length() >= 7) {
+            return ValidationResult.success();
+        }
+        return ValidationResult.failure("Parameter '" + parameter.name() + "' must be a valid phone number");
+    }
+    
+    private static ValidationResult validateTime(Parameter parameter, String value) {
+        try {
+            java.time.LocalTime.parse(value);
+            return ValidationResult.success();
+        } catch (java.time.format.DateTimeParseException e) {
+            return ValidationResult.failure("Parameter '" + parameter.name() + "' must be a valid time (HH:MM format)");
+        }
+    }
+    
+    private static ValidationResult validateDuration(Parameter parameter, String value) {
+        // Accept formats like "2 hours", "30 minutes", "1.5 hours", "90 min"
+        String durationRegex = "^\\d+(\\.\\d+)?\\s*(hours?|hrs?|minutes?|mins?|h|m)$";
+        if (value.toLowerCase().matches(durationRegex)) {
+            return ValidationResult.success();
+        }
+        return ValidationResult.failure("Parameter '" + parameter.name() + "' must be a valid duration (e.g., '2 hours', '30 minutes')");
     }
 }

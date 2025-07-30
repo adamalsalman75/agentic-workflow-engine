@@ -27,23 +27,37 @@ public record ParameterMetadataDto(
     
     private static String getDefaultPlaceholder(Parameter parameter) {
         return switch (parameter.type()) {
-            case STRING -> "Enter " + parameter.name().toLowerCase();
+            case TEXT -> "Enter " + parameter.name().toLowerCase();
             case NUMBER -> "Enter a number";
             case DATE -> "yyyy-MM-dd";
             case CURRENCY -> "1000 USD";
             case LOCATION -> "Paris, France";
             case SELECTION -> parameter.defaultValue() != null ? parameter.defaultValue() : "Select an option";
+            case BOOLEAN -> "true";
+            case EMAIL -> "user@example.com";
+            case URL -> "https://example.com";
+            case PERCENTAGE -> "75";
+            case PHONE -> "+1 234-567-8900";
+            case TIME -> "14:30";
+            case DURATION -> "2 hours";
         };
     }
     
     private static String getDefaultHelpText(Parameter parameter) {
         return switch (parameter.type()) {
-            case STRING -> parameter.description();
+            case TEXT -> parameter.description();
             case NUMBER -> parameter.description() + " (numeric value)";
             case DATE -> parameter.description() + " (format: yyyy-MM-dd, MM/dd/yyyy, or dd/MM/yyyy)";
             case CURRENCY -> parameter.description() + " (e.g., 1000 USD, EUR 500)";
             case LOCATION -> parameter.description() + " (city and country recommended)";
             case SELECTION -> parameter.description() + " (choose from available options)";
+            case BOOLEAN -> parameter.description() + " (true/false)";
+            case EMAIL -> parameter.description() + " (valid email address)";
+            case URL -> parameter.description() + " (full URL including https://)";
+            case PERCENTAGE -> parameter.description() + " (value between 0 and 100)";
+            case PHONE -> parameter.description() + " (include country code)";
+            case TIME -> parameter.description() + " (24-hour format HH:MM)";
+            case DURATION -> parameter.description() + " (e.g., 2 hours, 30 minutes)";
         };
     }
     

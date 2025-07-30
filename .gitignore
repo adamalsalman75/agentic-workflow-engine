@@ -32,5 +32,6 @@ build/
 ### VS Code ###
 .vscode/
 
-# Claude settings
-.claude/
+# Claude settings - only ignore local/personal settings
+.claude/settings.local.json
+.claude/*.local.*

@@ -19,7 +19,9 @@ public record WorkflowTemplate(
     String promptTemplate,
     String author,
     boolean isPublic,
-    Instant createdAt
+    Integer version,
+    Instant createdAt,
+    Instant updatedAt
 ) {
     
     public static WorkflowTemplate create(
@@ -37,6 +39,8 @@ public record WorkflowTemplate(
             promptTemplate,
             author,
             true,
+            1, // Initial version
+            Instant.now(),
             Instant.now()
         );
     }

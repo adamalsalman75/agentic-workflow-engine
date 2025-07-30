@@ -12,7 +12,7 @@ class ParameterValidatorTest {
     
     @Test
     void testRequiredParameterMissing() {
-        Parameter param = Parameter.required("test", "Test param", ParameterType.STRING);
+        Parameter param = Parameter.required("test", "Test param", ParameterType.TEXT);
         
         ParameterValidator.ValidationResult result = ParameterValidator.validate(param, null);
         
@@ -22,7 +22,7 @@ class ParameterValidatorTest {
     
     @Test
     void testOptionalParameterMissing() {
-        Parameter param = Parameter.optional("test", "Test param", ParameterType.STRING, "default");
+        Parameter param = Parameter.optional("test", "Test param", ParameterType.TEXT, "default");
         
         ParameterValidator.ValidationResult result = ParameterValidator.validate(param, null);
         
@@ -32,7 +32,7 @@ class ParameterValidatorTest {
     // String validation tests
     @Test
     void testStringValidation() {
-        Parameter param = Parameter.required("name", "Name", ParameterType.STRING);
+        Parameter param = Parameter.required("name", "Name", ParameterType.TEXT);
         
         assertThat(ParameterValidator.validate(param, "John Doe").isValid()).isTrue();
         assertThat(ParameterValidator.validate(param, "").isValid()).isFalse();
