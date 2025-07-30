@@ -82,7 +82,7 @@ You are the Ways of Working guardian for the agentic-workflow-engine project. Yo
 ### Each Story
 - [ ] **Acceptance criteria validated** - Each A/C is outcome-focused and measurable
 - [ ] Feature implemented according to acceptance criteria
-- [ ] Unit tests written and passing
+- [ ] Unit tests written and passing (requires PostgreSQL database running via `docker compose up -d postgres`)
 - [ ] Integration tests updated if needed
 - [ ] **Manual testing completed using established protocol**:
   - User starts application locally (`./mvnw spring-boot:run`)
@@ -114,10 +114,19 @@ You are the Ways of Working guardian for the agentic-workflow-engine project. Yo
 
 ## Manual Testing Protocol
 
+### Prerequisites
+**Database Setup**: PostgreSQL must be running before any development work begins.
+- **Start database**: `docker compose up -d postgres`
+- **Verify database**: `docker compose ps` (should show postgres container as healthy)
+- **Stop database**: `docker compose down` (when development session complete)
+
+**Note**: Unit tests, integration tests, and application startup all require the database to be running.
+
 ### Efficient Testing Workflow
 To avoid wasting OpenAI credits on duplicate testing efforts, follow this protocol:
 
 1. **User Responsibilities**:
+   - Ensure database is running: `docker compose up -d postgres`
    - Start the application locally: `./mvnw spring-boot:run`
    - Run test scripts: `./scripts/local/test-basic-api.sh`
    - For Kubernetes testing: `./scripts/kubernetes/test-k8s-comprehensive.sh`
