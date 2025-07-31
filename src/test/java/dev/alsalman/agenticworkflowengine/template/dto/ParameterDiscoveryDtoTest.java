@@ -5,8 +5,6 @@ import dev.alsalman.agenticworkflowengine.template.domain.ParameterType;
 import dev.alsalman.agenticworkflowengine.template.domain.ValidationRule;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,12 +14,14 @@ class ParameterDiscoveryDtoTest {
     
     @Test
     void parameterResponseDto_FromParameter_ShouldMapCorrectly() {
-        // Given
-        ValidationRule rule = ValidationRule.range(BigDecimal.ONE, BigDecimal.TEN, "Must be between 1 and 10");
-        Parameter parameter = Parameter.requiredWithValidation(
+        // Given - using simplified validation rules
+        ValidationRule rule = ValidationRule.required("Parameter is required");
+        Parameter parameter = new Parameter(
             "testParam", 
             "Test parameter description", 
-            ParameterType.NUMBER,
+            ParameterType.TEXT,
+            true,
+            null,
             List.of(rule)
         );
         
@@ -31,61 +31,70 @@ class ParameterDiscoveryDtoTest {
         // Then
         assertThat(dto.name()).isEqualTo("testParam");
         assertThat(dto.description()).isEqualTo("Test parameter description");
-        assertThat(dto.type()).isEqualTo(ParameterType.NUMBER);
+        assertThat(dto.type()).isEqualTo(ParameterType.TEXT);
         assertThat(dto.required()).isTrue();
         assertThat(dto.validation()).hasSize(1);
-        assertThat(dto.validation().get(0).type()).isEqualTo("RANGE");
-        assertThat(dto.validation().get(0).minValue()).isEqualTo(BigDecimal.ONE);
-        assertThat(dto.validation().get(0).maxValue()).isEqualTo(BigDecimal.TEN);
+        assertThat(dto.validation().get(0).type()).isEqualTo("REQUIRED");
+        assertThat(dto.validation().get(0).message()).isEqualTo("Parameter is required");
         assertThat(dto.metadata()).isNotNull();
-        assertThat(dto.metadata().placeholder()).isEqualTo("Enter a number");
+        assertThat(dto.metadata().placeholder()).isEqualTo("Enter testparam");
     }
     
     @Test
-    void validationRuleDto_FromValidationRule_ShouldMapAllFields() {
-        // Given
-        ValidationRule rule = ValidationRule.dateRange(
-            LocalDate.of(2024, 1, 1),
-            LocalDate.of(2024, 12, 31),
-            "Date must be in 2024"
+    void validationRuleDto_FromValidationRule_ShouldMapAllowedValues() {
+        // Given - using simplified ALLOWED_VALUES validation
+        ValidationRule rule = ValidationRule.allowedValues(
+            List.of("small", "medium", "large"),
+            "Size must be small, medium, or large"
         );
         
         // When
         ValidationRuleDto dto = ValidationRuleDto.fromValidationRule(rule);
         
         // Then
-        assertThat(dto.type()).isEqualTo("DATE_RANGE");
-        assertThat(dto.minDate()).isEqualTo(LocalDate.of(2024, 1, 1));
-        assertThat(dto.maxDate()).isEqualTo(LocalDate.of(2024, 12, 31));
-        assertThat(dto.message()).isEqualTo("Date must be in 2024");
-        assertThat(dto.pattern()).isNull();
+        assertThat(dto.type()).isEqualTo("ALLOWED_VALUES");
+        assertThat(dto.allowedValues()).containsExactly("small", "medium", "large");
+        assertThat(dto.message()).isEqualTo("Size must be small, medium, or large");
+    }
+    
+    @Test
+    void validationRuleDto_FromValidationRule_ShouldMapRequired() {
+        // Given
+        ValidationRule rule = ValidationRule.required("Field is required");
+        
+        // When
+        ValidationRuleDto dto = ValidationRuleDto.fromValidationRule(rule);
+        
+        // Then
+        assertThat(dto.type()).isEqualTo("REQUIRED");
         assertThat(dto.allowedValues()).isNull();
+        assertThat(dto.message()).isEqualTo("Field is required");
     }
     
     @Test
     void parameterMetadataDto_DefaultForParameter_ShouldCreateCorrectMetadata() {
-        // Given
-        Parameter locationParam = Parameter.required("destination", "Where to go", ParameterType.LOCATION);
+        // Given - using TEXT type with smart placeholder detection
+        Parameter locationParam = Parameter.required("business_location", "Where is your business located", ParameterType.TEXT);
         
         // When
         ParameterMetadataDto metadata = ParameterMetadataDto.defaultForParameter(locationParam);
         
         // Then
-        assertThat(metadata.placeholder()).isEqualTo("Paris, France");
-        assertThat(metadata.helpText()).isEqualTo("Where to go (city and country recommended)");
-        assertThat(metadata.order()).isEqualTo(1); // destination gets order 1
+        assertThat(metadata.placeholder()).isEqualTo("San Francisco, CA");
+        assertThat(metadata.helpText()).isEqualTo("Where is your business located (any location format)");
+        assertThat(metadata.order()).isEqualTo(3); // location gets order 3
         assertThat(metadata.group()).isEqualTo("Location");
     }
     
     @Test
     void parameterDiscoveryResponseDto_Create_ShouldOrderParametersCorrectly() {
-        // Given
+        // Given - using simplified parameter types
         UUID templateId = UUID.randomUUID();
         String templateName = "Test Template";
         List<Parameter> parameters = List.of(
-            Parameter.required("budget", "Budget amount", ParameterType.CURRENCY),
-            Parameter.required("destination", "Where to travel", ParameterType.LOCATION),
-            Parameter.required("startDate", "Departure date", ParameterType.DATE)
+            Parameter.required("funding_amount", "Budget amount", ParameterType.TEXT),
+            Parameter.required("business_location", "Where to locate business", ParameterType.TEXT),
+            Parameter.required("launch_date", "Launch date", ParameterType.TEXT)
         );
         
         // When
@@ -98,10 +107,10 @@ class ParameterDiscoveryDtoTest {
         assertThat(response.templateName()).isEqualTo(templateName);
         assertThat(response.parameters()).hasSize(3);
         
-        // Should be ordered by metadata.order(): destination(1), startDate(2), budget(5)
-        assertThat(response.parameters().get(0).name()).isEqualTo("destination");
-        assertThat(response.parameters().get(1).name()).isEqualTo("startDate");
-        assertThat(response.parameters().get(2).name()).isEqualTo("budget");
+        // Should be ordered by metadata.order(): location(3), date(4), amount(5)
+        assertThat(response.parameters().get(0).name()).isEqualTo("business_location");
+        assertThat(response.parameters().get(1).name()).isEqualTo("launch_date");
+        assertThat(response.parameters().get(2).name()).isEqualTo("funding_amount");
     }
     
     @Test
@@ -113,18 +122,65 @@ class ParameterDiscoveryDtoTest {
         
         assertThat(ParameterMetadataDto.defaultForParameter(
             Parameter.required("amount", "Amount", ParameterType.NUMBER)
-        ).placeholder()).isEqualTo("Enter a number");
+        ).placeholder()).isEqualTo("5");
         
         assertThat(ParameterMetadataDto.defaultForParameter(
-            Parameter.required("date", "Date", ParameterType.DATE)
-        ).placeholder()).isEqualTo("yyyy-MM-dd");
-        
-        assertThat(ParameterMetadataDto.defaultForParameter(
-            Parameter.required("price", "Price", ParameterType.CURRENCY)
-        ).placeholder()).isEqualTo("1000 USD");
+            Parameter.required("is_active", "Is Active", ParameterType.BOOLEAN)
+        ).placeholder()).isEqualTo("false");
         
         assertThat(ParameterMetadataDto.defaultForParameter(
             Parameter.optional("style", "Style", ParameterType.SELECTION, "Standard")
         ).placeholder()).isEqualTo("Standard");
+    }
+    
+    @Test
+    void parameterMetadataDto_ShouldDetectSmartPlaceholders() {
+        // Test smart placeholder detection based on parameter names
+        assertThat(ParameterMetadataDto.defaultForParameter(
+            Parameter.required("business_email", "Email", ParameterType.TEXT)
+        ).placeholder()).isEqualTo("user@example.com");
+        
+        assertThat(ParameterMetadataDto.defaultForParameter(
+            Parameter.required("launch_date", "Date", ParameterType.TEXT)
+        ).placeholder()).isEqualTo("June 2025");
+        
+        assertThat(ParameterMetadataDto.defaultForParameter(
+            Parameter.required("funding_amount", "Budget", ParameterType.TEXT)
+        ).placeholder()).isEqualTo("1000 USD");
+        
+        assertThat(ParameterMetadataDto.defaultForParameter(
+            Parameter.required("business_location", "Location", ParameterType.TEXT)
+        ).placeholder()).isEqualTo("San Francisco, CA");
+        
+        assertThat(ParameterMetadataDto.defaultForParameter(
+            Parameter.required("contact_phone", "Phone", ParameterType.TEXT)
+        ).placeholder()).isEqualTo("+1 234-567-8900");
+    }
+    
+    @Test
+    void selectionParameter_WithAllowedValues_ShouldValidateCorrectly() {
+        // Given
+        ValidationRule allowedValuesRule = ValidationRule.allowedValues(
+            List.of("Technology", "Healthcare", "Finance"), 
+            "Please select a valid industry"
+        );
+        Parameter parameter = new Parameter(
+            "industry", 
+            "Business industry", 
+            ParameterType.SELECTION,
+            true,
+            "Technology",
+            List.of(allowedValuesRule)
+        );
+        
+        // When
+        ParameterResponseDto dto = ParameterResponseDto.fromParameter(parameter);
+        
+        // Then
+        assertThat(dto.type()).isEqualTo(ParameterType.SELECTION);
+        assertThat(dto.validation()).hasSize(1);
+        assertThat(dto.validation().get(0).type()).isEqualTo("ALLOWED_VALUES");
+        assertThat(dto.validation().get(0).allowedValues()).containsExactly("Technology", "Healthcare", "Finance");
+        assertThat(dto.defaultValue()).isEqualTo("Technology");
     }
 }

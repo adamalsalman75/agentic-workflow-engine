@@ -2,9 +2,12 @@ package dev.alsalman.agenticworkflowengine.template.validation;
 
 import dev.alsalman.agenticworkflowengine.template.domain.Parameter;
 import dev.alsalman.agenticworkflowengine.template.domain.ParameterType;
+import dev.alsalman.agenticworkflowengine.template.domain.ValidationRule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,17 +32,24 @@ class ParameterValidatorTest {
         assertThat(result.isValid()).isTrue();
     }
     
-    // String validation tests
+    // TEXT validation tests - LLM-friendly, accepts anything
     @Test
-    void testStringValidation() {
+    void testTextValidation() {
         Parameter param = Parameter.required("name", "Name", ParameterType.TEXT);
         
+        // TEXT type should accept any format - trusting LLM flexibility
         assertThat(ParameterValidator.validate(param, "John Doe").isValid()).isTrue();
+        assertThat(ParameterValidator.validate(param, "john.doe@company.com").isValid()).isTrue();
+        assertThat(ParameterValidator.validate(param, "San Francisco, CA").isValid()).isTrue();
+        assertThat(ParameterValidator.validate(param, "June 15, 2025").isValid()).isTrue();
+        assertThat(ParameterValidator.validate(param, "$50,000 USD").isValid()).isTrue();
+        
+        // Only fail on empty required fields
         assertThat(ParameterValidator.validate(param, "").isValid()).isFalse();
         assertThat(ParameterValidator.validate(param, "   ").isValid()).isFalse();
     }
     
-    // Number validation tests
+    // NUMBER validation tests
     @Test
     void testNumberValidation() {
         Parameter param = Parameter.required("age", "Age", ParameterType.NUMBER);
@@ -47,105 +57,56 @@ class ParameterValidatorTest {
         assertThat(ParameterValidator.validate(param, 25).isValid()).isTrue();
         assertThat(ParameterValidator.validate(param, "42").isValid()).isTrue();
         assertThat(ParameterValidator.validate(param, "42.5").isValid()).isTrue();
+        assertThat(ParameterValidator.validate(param, "-10").isValid()).isTrue();
+        assertThat(ParameterValidator.validate(param, "0").isValid()).isTrue();
+        
         assertThat(ParameterValidator.validate(param, "not a number").isValid()).isFalse();
-    }
-    
-    // Date validation tests
-    @ParameterizedTest
-    @ValueSource(strings = {
-        "2024-01-15",
-        "01/15/2024",
-        "15/01/2024"
-    })
-    void testDateValidation_ValidFormats(String date) {
-        Parameter param = Parameter.required("date", "Date", ParameterType.DATE);
-        
-        assertThat(ParameterValidator.validate(param, date).isValid()).isTrue();
-    }
-    
-    @ParameterizedTest
-    @ValueSource(strings = {
-        "2024-13-01",  // Invalid month
-        "not a date",
-        "2024/01/15",  // Wrong separator
-        "15-01-2024"   // Wrong format
-    })
-    void testDateValidation_InvalidFormats(String date) {
-        Parameter param = Parameter.required("date", "Date", ParameterType.DATE);
-        
-        ParameterValidator.ValidationResult result = ParameterValidator.validate(param, date);
-        assertThat(result.isValid()).isFalse();
-        assertThat(result.getErrors().get(0)).contains("must be a valid date");
-    }
-    
-    // Currency validation tests
-    @ParameterizedTest
-    @ValueSource(strings = {
-        "USD",
-        "100 USD",
-        "USD 100",
-        "1000.50 EUR",
-        "GBP 2500"
-    })
-    void testCurrencyValidation_ValidFormats(String currency) {
-        Parameter param = Parameter.required("budget", "Budget", ParameterType.CURRENCY);
-        
-        assertThat(ParameterValidator.validate(param, currency).isValid()).isTrue();
-    }
-    
-    @ParameterizedTest
-    @ValueSource(strings = {
-        "XYZ",          // Invalid currency code
-        "100",          // No currency code
-        "USD EUR",      // Two currency codes
-        "ABC 100",      // Invalid currency code
-        "100 200 USD"   // Too many parts
-    })
-    void testCurrencyValidation_InvalidFormats(String currency) {
-        Parameter param = Parameter.required("budget", "Budget", ParameterType.CURRENCY);
-        
-        ParameterValidator.ValidationResult result = ParameterValidator.validate(param, currency);
-        assertThat(result.isValid()).isFalse();
-    }
-    
-    // Location validation tests
-    @ParameterizedTest
-    @ValueSource(strings = {
-        "Paris",
-        "New York City",
-        "Paris, France",
-        "San Francisco, CA",
-        "Tokyo-Japan",
-        "St. Petersburg"
-    })
-    void testLocationValidation_ValidFormats(String location) {
-        Parameter param = Parameter.required("destination", "Destination", ParameterType.LOCATION);
-        
-        assertThat(ParameterValidator.validate(param, location).isValid()).isTrue();
-    }
-    
-    @ParameterizedTest
-    @ValueSource(strings = {
-        "",
-        "   ",
-        "123456",       // Only numbers
-        "Paris@France", // Invalid character
-        "New York!"     // Invalid character
-    })
-    void testLocationValidation_InvalidFormats(String location) {
-        Parameter param = Parameter.required("destination", "Destination", ParameterType.LOCATION);
-        
-        ParameterValidator.ValidationResult result = ParameterValidator.validate(param, location);
-        assertThat(result.isValid()).isFalse();
-    }
-    
-    // Selection validation tests
-    @Test
-    void testSelectionValidation() {
-        Parameter param = Parameter.required("style", "Style", ParameterType.SELECTION);
-        
-        assertThat(ParameterValidator.validate(param, "Economy").isValid()).isTrue();
-        assertThat(ParameterValidator.validate(param, "Business").isValid()).isTrue();
         assertThat(ParameterValidator.validate(param, "").isValid()).isFalse();
+    }
+    
+    // BOOLEAN validation tests
+    @ParameterizedTest
+    @ValueSource(strings = {"true", "false", "TRUE", "FALSE", "yes", "no", "YES", "NO", "1", "0"})
+    void testBooleanValidation_ValidFormats(String value) {
+        Parameter param = Parameter.required("flag", "Flag", ParameterType.BOOLEAN);
+        
+        assertThat(ParameterValidator.validate(param, value).isValid()).isTrue();
+    }
+    
+    @ParameterizedTest
+    @ValueSource(strings = {"maybe", "2", "on", "off", "enabled", "disabled"})
+    void testBooleanValidation_InvalidFormats(String value) {
+        Parameter param = Parameter.required("flag", "Flag", ParameterType.BOOLEAN);
+        
+        ParameterValidator.ValidationResult result = ParameterValidator.validate(param, value);
+        assertThat(result.isValid()).isFalse();
+        assertThat(result.getErrors().get(0)).contains("must be true/false, yes/no, or 1/0");
+    }
+    
+    // SELECTION validation tests
+    @Test
+    void testSelectionValidation_WithValidValues() {
+        ValidationRule allowedValuesRule = ValidationRule.allowedValues(
+            List.of("small", "medium", "large"), 
+            "Size must be small, medium, or large"
+        );
+        Parameter param = new Parameter("size", "Size", ParameterType.SELECTION, true, null, List.of(allowedValuesRule));
+        
+        assertThat(ParameterValidator.validate(param, "small").isValid()).isTrue();
+        assertThat(ParameterValidator.validate(param, "medium").isValid()).isTrue();
+        assertThat(ParameterValidator.validate(param, "large").isValid()).isTrue();
+        
+        ParameterValidator.ValidationResult result = ParameterValidator.validate(param, "extra-large");
+        assertThat(result.isValid()).isFalse();
+        assertThat(result.getErrors().get(0)).contains("must be one of: small, medium, large");
+    }
+    
+    @Test
+    void testSelectionValidation_WithoutValidationRule() {
+        // SELECTION without ALLOWED_VALUES rule should accept anything
+        Parameter param = Parameter.required("category", "Category", ParameterType.SELECTION);
+        
+        assertThat(ParameterValidator.validate(param, "any-value").isValid()).isTrue();
+        assertThat(ParameterValidator.validate(param, "anything").isValid()).isTrue();
     }
 }

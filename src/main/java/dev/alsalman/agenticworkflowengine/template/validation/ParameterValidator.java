@@ -2,30 +2,15 @@ package dev.alsalman.agenticworkflowengine.template.validation;
 
 import dev.alsalman.agenticworkflowengine.template.domain.Parameter;
 import dev.alsalman.agenticworkflowengine.template.domain.ParameterType;
+import dev.alsalman.agenticworkflowengine.template.domain.ValidationRule;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Currency;
 import java.util.List;
-import java.util.Set;
 
 /**
- * Validates parameter values based on their type
+ * Simplified parameter validator optimized for LLM consumption.
+ * Focus on essential validation while trusting LLM flexibility.
  */
 public class ParameterValidator {
-    
-    private static final Set<String> VALID_CURRENCY_CODES = Set.of(
-        "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "SEK", "NZD"
-    );
-    
-    private static final DateTimeFormatter[] DATE_FORMATTERS = {
-        DateTimeFormatter.ISO_LOCAL_DATE,
-        DateTimeFormatter.ofPattern("MM/dd/yyyy"),
-        DateTimeFormatter.ofPattern("dd/MM/yyyy"),
-        DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    };
     
     public static class ValidationResult {
         private final boolean valid;
@@ -66,26 +51,18 @@ public class ParameterValidator {
         }
         
         return switch (parameter.type()) {
-            case TEXT -> validateString(parameter, value.toString());
+            case TEXT -> validateText(parameter, value.toString());
             case NUMBER -> validateNumber(parameter, value);
-            case SELECTION -> validateSelection(parameter, value.toString());
-            case DATE -> validateDate(parameter, value.toString());
-            case CURRENCY -> validateCurrency(parameter, value.toString());
-            case LOCATION -> validateLocation(parameter, value.toString());
             case BOOLEAN -> validateBoolean(parameter, value.toString());
-            case EMAIL -> validateEmail(parameter, value.toString());
-            case URL -> validateUrl(parameter, value.toString());
-            case PERCENTAGE -> validatePercentage(parameter, value.toString());
-            case PHONE -> validatePhone(parameter, value.toString());
-            case TIME -> validateTime(parameter, value.toString());
-            case DURATION -> validateDuration(parameter, value.toString());
+            case SELECTION -> validateSelection(parameter, value.toString());
         };
     }
     
-    private static ValidationResult validateString(Parameter parameter, String value) {
+    private static ValidationResult validateText(Parameter parameter, String value) {
         if (value.trim().isEmpty() && parameter.required()) {
             return ValidationResult.failure("Required parameter '" + parameter.name() + "' cannot be empty");
         }
+        // For TEXT type, we trust LLM to handle any format (emails, dates, currencies, etc.)
         return ValidationResult.success();
     }
     
@@ -101,165 +78,26 @@ public class ParameterValidator {
         }
     }
     
-    private static ValidationResult validateSelection(Parameter parameter, String value) {
-        // For now, any non-empty string is valid for selection
-        // In Phase 2 Story 2, we'll add allowed values validation
-        if (value.trim().isEmpty() && parameter.required()) {
-            return ValidationResult.failure("Required parameter '" + parameter.name() + "' must have a selection");
-        }
-        return ValidationResult.success();
-    }
-    
-    private static ValidationResult validateDate(Parameter parameter, String value) {
-        // Try multiple date formats
-        for (DateTimeFormatter formatter : DATE_FORMATTERS) {
-            try {
-                LocalDate.parse(value, formatter);
-                return ValidationResult.success();
-            } catch (DateTimeParseException ignored) {
-                // Try next format
-            }
-        }
-        
-        return ValidationResult.failure(
-            "Parameter '" + parameter.name() + "' must be a valid date. " +
-            "Supported formats: yyyy-MM-dd, MM/dd/yyyy, dd/MM/yyyy"
-        );
-    }
-    
-    private static ValidationResult validateCurrency(Parameter parameter, String value) {
-        // Format: "100 USD" or "USD 100" or just "USD"
-        String[] parts = value.trim().split("\\s+");
-        
-        if (parts.length == 0 || parts.length > 2) {
-            return ValidationResult.failure(
-                "Parameter '" + parameter.name() + "' must be in format 'amount currency' or 'currency amount'"
-            );
-        }
-        
-        String currencyCode = null;
-        String amount = null;
-        
-        if (parts.length == 1) {
-            // Just currency code
-            currencyCode = parts[0];
-        } else {
-            // Try to determine which is currency and which is amount
-            if (VALID_CURRENCY_CODES.contains(parts[0].toUpperCase())) {
-                currencyCode = parts[0];
-                amount = parts[1];
-            } else if (VALID_CURRENCY_CODES.contains(parts[1].toUpperCase())) {
-                amount = parts[0];
-                currencyCode = parts[1];
-            } else {
-                return ValidationResult.failure(
-                    "Parameter '" + parameter.name() + "' must include a valid currency code"
-                );
-            }
-        }
-        
-        // Validate currency code
-        if (!VALID_CURRENCY_CODES.contains(currencyCode.toUpperCase())) {
-            return ValidationResult.failure(
-                "Parameter '" + parameter.name() + "' has invalid currency code. " +
-                "Supported: " + String.join(", ", VALID_CURRENCY_CODES)
-            );
-        }
-        
-        // Validate amount if present
-        if (amount != null) {
-            try {
-                Double.parseDouble(amount);
-            } catch (NumberFormatException e) {
-                return ValidationResult.failure(
-                    "Parameter '" + parameter.name() + "' has invalid amount: " + amount
-                );
-            }
-        }
-        
-        return ValidationResult.success();
-    }
-    
-    private static ValidationResult validateLocation(Parameter parameter, String value) {
-        // Basic location validation - just check it's not empty
-        // Could be enhanced with geocoding API integration
-        if (value.trim().isEmpty() && parameter.required()) {
-            return ValidationResult.failure("Required parameter '" + parameter.name() + "' cannot be empty");
-        }
-        
-        // Simple validation: must contain at least letters and can have spaces, commas
-        if (!value.matches("^[a-zA-Z\\s,.-]+$")) {
-            return ValidationResult.failure(
-                "Parameter '" + parameter.name() + "' must be a valid location name"
-            );
-        }
-        
-        return ValidationResult.success();
-    }
-    
     private static ValidationResult validateBoolean(Parameter parameter, String value) {
-        String lowerValue = value.trim().toLowerCase();
-        if (lowerValue.equals("true") || lowerValue.equals("false") || 
-            lowerValue.equals("yes") || lowerValue.equals("no") ||
-            lowerValue.equals("1") || lowerValue.equals("0")) {
+        String normalized = value.toLowerCase().trim();
+        if (normalized.equals("true") || normalized.equals("false") || 
+            normalized.equals("yes") || normalized.equals("no") ||
+            normalized.equals("1") || normalized.equals("0")) {
             return ValidationResult.success();
         }
         return ValidationResult.failure("Parameter '" + parameter.name() + "' must be true/false, yes/no, or 1/0");
     }
     
-    private static ValidationResult validateEmail(Parameter parameter, String value) {
-        String emailRegex = "^[\\w.-]+@[\\w.-]+\\.\\w+$";
-        if (value.matches(emailRegex)) {
-            return ValidationResult.success();
-        }
-        return ValidationResult.failure("Parameter '" + parameter.name() + "' must be a valid email address");
-    }
-    
-    private static ValidationResult validateUrl(Parameter parameter, String value) {
-        try {
-            new java.net.URL(value);
-            return ValidationResult.success();
-        } catch (java.net.MalformedURLException e) {
-            return ValidationResult.failure("Parameter '" + parameter.name() + "' must be a valid URL");
-        }
-    }
-    
-    private static ValidationResult validatePercentage(Parameter parameter, String value) {
-        try {
-            double percent = Double.parseDouble(value);
-            if (percent >= 0 && percent <= 100) {
-                return ValidationResult.success();
+    private static ValidationResult validateSelection(Parameter parameter, String value) {
+        // Check if parameter has ALLOWED_VALUES validation rule
+        for (ValidationRule rule : parameter.validationRules()) {
+            if (rule.type() == ValidationRule.ValidationRuleType.ALLOWED_VALUES) {
+                if (!rule.allowedValues().contains(value)) {
+                    return ValidationResult.failure("Parameter '" + parameter.name() + 
+                        "' must be one of: " + String.join(", ", rule.allowedValues()));
+                }
             }
-            return ValidationResult.failure("Parameter '" + parameter.name() + "' must be between 0 and 100");
-        } catch (NumberFormatException e) {
-            return ValidationResult.failure("Parameter '" + parameter.name() + "' must be a valid percentage");
         }
-    }
-    
-    private static ValidationResult validatePhone(Parameter parameter, String value) {
-        // Basic phone validation - allows digits, spaces, dashes, parentheses, plus
-        String phoneRegex = "^[\\+]?[\\d\\s\\-\\(\\)]+$";
-        if (value.matches(phoneRegex) && value.replaceAll("[^\\d]", "").length() >= 7) {
-            return ValidationResult.success();
-        }
-        return ValidationResult.failure("Parameter '" + parameter.name() + "' must be a valid phone number");
-    }
-    
-    private static ValidationResult validateTime(Parameter parameter, String value) {
-        try {
-            java.time.LocalTime.parse(value);
-            return ValidationResult.success();
-        } catch (java.time.format.DateTimeParseException e) {
-            return ValidationResult.failure("Parameter '" + parameter.name() + "' must be a valid time (HH:MM format)");
-        }
-    }
-    
-    private static ValidationResult validateDuration(Parameter parameter, String value) {
-        // Accept formats like "2 hours", "30 minutes", "1.5 hours", "90 min"
-        String durationRegex = "^\\d+(\\.\\d+)?\\s*(hours?|hrs?|minutes?|mins?|h|m)$";
-        if (value.toLowerCase().matches(durationRegex)) {
-            return ValidationResult.success();
-        }
-        return ValidationResult.failure("Parameter '" + parameter.name() + "' must be a valid duration (e.g., '2 hours', '30 minutes')");
+        return ValidationResult.success();
     }
 }

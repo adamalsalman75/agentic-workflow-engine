@@ -166,51 +166,56 @@ public class ParameterPersistenceService {
     
     private String generatePlaceholder(String paramName, ParameterType type) {
         return switch (type) {
-            case LOCATION -> "Paris, France";
-            case DATE -> "2025-12-25";
+            case TEXT -> determineTextPlaceholder(paramName);
             case NUMBER -> "5";
-            case CURRENCY -> "1000 USD";
+            case BOOLEAN -> "false";
             case SELECTION -> "Select an option";
-            case ParameterType.EMAIL -> "user@example.com";
-            case ParameterType.URL -> "https://example.com";
-            case ParameterType.PERCENTAGE -> "75";
-            case ParameterType.PHONE -> "+1 234-567-8900";
-            case ParameterType.TIME -> "14:30";
-            case ParameterType.DURATION -> "2 hours";
-            default -> "Enter " + paramName.toLowerCase();
         };
+    }
+    
+    private String determineTextPlaceholder(String paramName) {
+        String lowerName = paramName.toLowerCase();
+        if (lowerName.contains("email")) return "user@example.com";
+        if (lowerName.contains("date")) return "June 2025";
+        if (lowerName.contains("location") || lowerName.contains("address")) return "San Francisco, CA";
+        if (lowerName.contains("budget") || lowerName.contains("amount") || lowerName.contains("cost")) return "1000 USD";
+        if (lowerName.contains("phone")) return "+1 234-567-8900";
+        if (lowerName.contains("url") || lowerName.contains("website")) return "https://example.com";
+        return "Enter " + paramName.toLowerCase().replace("_", " ");
     }
     
     private String generateHelpText(String paramName, ParameterType type) {
         return switch (type) {
-            case LOCATION -> "Enter a city, state, or country";
-            case DATE -> "Format: YYYY-MM-DD";
+            case TEXT -> determineTextHelpText(paramName);
             case NUMBER -> "Enter a numeric value";
-            case CURRENCY -> "Amount with currency code (e.g., 1000 USD)";
+            case BOOLEAN -> "Select true or false";
             case SELECTION -> "Choose from available options";
-            case ParameterType.EMAIL -> "Valid email address";
-            case ParameterType.URL -> "Full URL including https://";
-            case ParameterType.PERCENTAGE -> "Value between 0 and 100";
-            case ParameterType.PHONE -> "Include country code";
-            case ParameterType.TIME -> "24-hour format (HH:MM)";
-            case ParameterType.DURATION -> "e.g., '2 hours', '30 minutes'";
-            default -> "Provide " + paramName.toLowerCase();
         };
+    }
+    
+    private String determineTextHelpText(String paramName) {
+        String lowerName = paramName.toLowerCase();
+        if (lowerName.contains("email")) return "Enter email address in any format";
+        if (lowerName.contains("date")) return "Enter date in any format (e.g., June 2025, 2025-06-01)";
+        if (lowerName.contains("location") || lowerName.contains("address")) return "Enter city, state, country in any format";
+        if (lowerName.contains("budget") || lowerName.contains("amount") || lowerName.contains("cost")) return "Enter amount in any format (e.g., 1000 USD, $1,000)";
+        if (lowerName.contains("phone")) return "Enter phone number in any format";
+        if (lowerName.contains("url") || lowerName.contains("website")) return "Enter website URL";
+        return "Enter " + paramName.toLowerCase().replace("_", " ");
     }
     
     private String determineGroup(String paramName, ParameterType type) {
         String lowerName = paramName.toLowerCase();
         
         if (lowerName.contains("location") || lowerName.contains("destination") || 
-            lowerName.contains("address") || type == ParameterType.LOCATION) {
+            lowerName.contains("address")) {
             return "Location";
         }
-        if (lowerName.contains("date") || lowerName.contains("time") || 
-            type == ParameterType.DATE || type == ParameterType.TIME) {
+        if (lowerName.contains("date") || lowerName.contains("time")) {
             return "Dates";
         }
         if (lowerName.contains("budget") || lowerName.contains("cost") || 
-            lowerName.contains("price") || type == ParameterType.CURRENCY) {
+            lowerName.contains("price") || lowerName.contains("amount")) {
             return "Budget";
         }
         if (lowerName.contains("style") || lowerName.contains("preference") || 
