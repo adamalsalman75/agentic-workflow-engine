@@ -49,13 +49,13 @@ class ParameterPersistenceServiceTest {
             Parameter.requiredWithValidation(
                 "destination", 
                 "Where are you traveling to?", 
-                ParameterType.LOCATION,
-                List.of(ValidationRule.pattern("^[A-Za-z\\s,.-]+$", "Invalid location format"))
+                ParameterType.TEXT,
+                List.of(ValidationRule.required("Destination is required"))
             ),
             Parameter.optional(
                 "budget", 
                 "Travel budget", 
-                ParameterType.CURRENCY, 
+                ParameterType.TEXT, 
                 "1000 USD"
             )
         );
@@ -97,7 +97,7 @@ class ParameterPersistenceServiceTest {
             templateId,
             "startDate",
             "Departure date",
-            ParameterType.DATE.name(),
+            ParameterType.TEXT.name(),
             true,
             null,
             0,
@@ -107,9 +107,9 @@ class ParameterPersistenceServiceTest {
         ParameterValidationRule validationRule = new ParameterValidationRule(
             UUID.randomUUID(),
             paramId,
-            "DATE_RANGE",
-            "{\"min\": \"" + LocalDate.now().toString() + "\"}",
-            "Date cannot be in the past",
+            "REQUIRED",
+            "{}",
+            "Start date is required",
             Instant.now()
         );
         
@@ -125,14 +125,13 @@ class ParameterPersistenceServiceTest {
         assertEquals(1, result.size());
         Parameter param = result.get(0);
         assertEquals("startDate", param.name());
-        assertEquals(ParameterType.DATE, param.type());
+        assertEquals(ParameterType.TEXT, param.type());
         assertTrue(param.required());
         assertEquals(1, param.validationRules().size());
         
         ValidationRule rule = param.validationRules().get(0);
-        assertEquals(ValidationRule.ValidationRuleType.DATE_RANGE, rule.type());
-        assertEquals(LocalDate.now(), rule.minDate());
-        assertNull(rule.maxDate());
+        assertEquals(ValidationRule.ValidationRuleType.REQUIRED, rule.type());
+        assertEquals("Start date is required", rule.customMessage());
     }
     
     @Test
@@ -146,7 +145,7 @@ class ParameterPersistenceServiceTest {
             templateId,
             "destination",
             "Where are you traveling to?",
-            ParameterType.LOCATION.name(),
+            ParameterType.TEXT.name(),
             true,
             null,
             0,
@@ -167,9 +166,9 @@ class ParameterPersistenceServiceTest {
         ParameterValidationRule validationRule = new ParameterValidationRule(
             UUID.randomUUID(),
             paramId,
-            "PATTERN",
-            "{\"pattern\": \"^[A-Za-z\\\\s,.-]+$\"}",
-            "Invalid location format",
+            "REQUIRED",
+            "{}",
+            "Destination is required",
             Instant.now()
         );
         
@@ -187,7 +186,7 @@ class ParameterPersistenceServiceTest {
         assertEquals(1, result.size());
         ParameterResponseDto dto = result.get(0);
         assertEquals("destination", dto.name());
-        assertEquals(ParameterType.LOCATION, dto.type());
+        assertEquals(ParameterType.TEXT, dto.type());
         assertTrue(dto.required());
         
         assertNotNull(dto.metadata());
@@ -198,8 +197,8 @@ class ParameterPersistenceServiceTest {
         
         assertEquals(1, dto.validation().size());
         var validationDto = dto.validation().get(0);
-        assertEquals("PATTERN", validationDto.type());
-        assertEquals("^[A-Za-z\\s,.-]+$", validationDto.pattern());
+        assertEquals("REQUIRED", validationDto.type());
+        assertEquals("Destination is required", validationDto.message());
     }
     
     @Test

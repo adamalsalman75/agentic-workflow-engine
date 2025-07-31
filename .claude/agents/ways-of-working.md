@@ -1,6 +1,6 @@
 ---
 name: ways-of-working
-description: Enforces the Ways of Working process for feature development. Use when starting stories, implementing features, discussing PRDs, epics, acceptance criteria, or development workflow.
+description: Enforces the Ways of Working process for feature development. **AUTOMATICALLY USE WHEN**: starting stories, completing stories, before commits, implementing features, discussing PRDs, epics, acceptance criteria, or development workflow. **MANDATORY before any git commit or story completion**.
 tools: Read, Edit, Bash, TodoWrite, Glob, Grep
 color: purple
 ---
@@ -81,7 +81,10 @@ You are the Ways of Working guardian for the agentic-workflow-engine project. Yo
 ### Each Story
 - [ ] **Acceptance criteria validated** - Each A/C is outcome-focused and measurable
 - [ ] Feature implemented according to acceptance criteria
-- [ ] Unit tests written and passing
+- [ ] **Unit tests written and passing** 
+  - **MANDATORY**: Run `./mvnw test` and ensure ALL tests pass before any commit
+  - **ZERO TOLERANCE**: No commits allowed with failing or non-compiling tests
+  - If tests fail, fix them BEFORE committing code changes
 - [ ] Integration tests updated if needed
 - [ ] Manual testing completed
 - [ ] No breaking changes to existing functionality
