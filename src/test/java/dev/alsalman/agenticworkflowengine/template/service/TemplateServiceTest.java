@@ -69,17 +69,17 @@ class TemplateServiceTest {
         
         // Mock parameter persistence service to return basic parameters
         List<Parameter> mockParameters = List.of(
-            Parameter.required("destination", "Travel destination", ParameterType.LOCATION),
-            Parameter.required("startDate", "Start date", ParameterType.DATE),
+            Parameter.required("destination", "Travel destination", ParameterType.TEXT),
+            Parameter.required("startDate", "Start date", ParameterType.TEXT),
             Parameter.required("duration", "Duration in days", ParameterType.NUMBER),
-            Parameter.optional("budget", "Travel budget", ParameterType.CURRENCY, "1000 USD"),
+            Parameter.optional("budget", "Travel budget", ParameterType.TEXT, "1000 USD"),
             Parameter.optional("travelStyle", "Travel style", ParameterType.SELECTION, "Mid-range")
         );
         lenient().when(parameterPersistenceService.loadTemplateParameters(any())).thenReturn(mockParameters);
     }
     
     @Test
-    void testExecuteTemplate_WithAllNewParameterTypes() {
+    void testExecuteTemplate_WithSimplifiedParameterTypes() {
         // Given
         when(repository.findById(templateId)).thenReturn(Optional.of(template));
         Goal goal = new Goal(UUID.randomUUID(), "Test prompt", List.of(), "Test summary", 
@@ -104,15 +104,15 @@ class TemplateServiceTest {
     }
     
     @Test
-    void testExecuteTemplate_WithInvalidDate() {
+    void testExecuteTemplate_WithInvalidNumber() {
         // Given
         when(repository.findById(templateId)).thenReturn(Optional.of(template));
-        when(advancedValidator.validateParameter(any(), any())).thenReturn(List.of("Invalid date format"));
+        when(advancedValidator.validateParameter(any(), any())).thenReturn(List.of("must be a valid number"));
         
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("destination", "Paris");
-        parameters.put("startDate", "invalid-date");
-        parameters.put("duration", "5");
+        parameters.put("startDate", "June 2025");
+        parameters.put("duration", "not-a-number"); // Invalid number
         
         // When & Then
         assertThatThrownBy(() -> templateService.executeTemplate(templateId, parameters))
@@ -121,33 +121,39 @@ class TemplateServiceTest {
     }
     
     @Test
-    void testExecuteTemplate_WithInvalidCurrency() {
+    void testExecuteTemplate_WithTextFlexibility() {
         // Given
         when(repository.findById(templateId)).thenReturn(Optional.of(template));
-        when(advancedValidator.validateParameter(any(), any())).thenReturn(List.of("Invalid currency format"));
+        Goal goal = new Goal(UUID.randomUUID(), "Test prompt", List.of(), "Test summary", 
+            GoalStatus.COMPLETED, Instant.now(), Instant.now());
+        when(orchestrator.executeWorkflow(any(), any())).thenReturn(
+            WorkflowResult.success(goal, Instant.now())
+        );
         
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("destination", "Tokyo");
-        parameters.put("startDate", "2024-08-01");
+        parameters.put("startDate", "August 2025"); // TEXT accepts flexible formats
         parameters.put("duration", "10");
-        parameters.put("budget", "invalid-currency");
+        parameters.put("budget", "$5000 USD"); // TEXT accepts any currency format
         
-        // When & Then
-        assertThatThrownBy(() -> templateService.executeTemplate(templateId, parameters))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Parameter validation failed");
+        // When
+        WorkflowResult result = templateService.executeTemplate(templateId, parameters);
+        
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.success()).isTrue();
     }
     
     @Test
-    void testExecuteTemplate_WithInvalidLocation() {
+    void testExecuteTemplate_WithRequiredParameterMissing() {
         // Given
         when(repository.findById(templateId)).thenReturn(Optional.of(template));
-        when(advancedValidator.validateParameter(any(), any())).thenReturn(List.of("Invalid location"));
+        when(advancedValidator.validateParameter(any(), any())).thenReturn(List.of("Required parameter is missing"));
         
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("destination", "123!@#");
-        parameters.put("startDate", "2024-07-01");
+        parameters.put("startDate", "July 2025");
         parameters.put("duration", "3");
+        // Missing required destination parameter
         
         // When & Then
         assertThatThrownBy(() -> templateService.executeTemplate(templateId, parameters))
@@ -167,7 +173,7 @@ class TemplateServiceTest {
         
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("destination", "London, UK");
-        parameters.put("startDate", "2024-09-01");
+        parameters.put("startDate", "September 2025");
         parameters.put("duration", "14");
         // budget and travelStyle will use defaults
         
@@ -180,7 +186,7 @@ class TemplateServiceTest {
     }
     
     @Test
-    void testExecuteTemplate_WithMultipleDateFormats() {
+    void testExecuteTemplate_WithFlexibleTextFormats() {
         // Given
         when(repository.findById(templateId)).thenReturn(Optional.of(template));
         Goal goal = new Goal(UUID.randomUUID(), "Test prompt", List.of(), "Test summary", 
@@ -189,10 +195,10 @@ class TemplateServiceTest {
             WorkflowResult.success(goal, Instant.now())
         );
         
-        // Test MM/dd/yyyy format
+        // TEST accepts multiple formats - LLM handles parsing
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("destination", "Rome, Italy");
-        parameters.put("startDate", "12/25/2024");
+        parameters.put("startDate", "Christmas 2025"); // Natural language date
         parameters.put("duration", "4");
         
         // When

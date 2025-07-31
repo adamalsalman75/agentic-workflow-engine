@@ -154,10 +154,10 @@ if [ $? -eq 0 ] && [ "$(echo $TEMPLATES | jq length)" -gt 0 ]; then
         echo "❌ Enhanced parameter discovery API failed"
     fi
     
-    # Quick Story 2 validation test
+    # Story 7: LLM-first flexibility test (updated from Story 2)
     echo ""
-    echo "7. Quick Story 2 validation test:"
-    VALIDATION_TEST=$(curl -s -X POST "${API_BASE}/api/templates/${TEMPLATE_ID}/execute" \
+    echo "7. LLM flexibility test (simplified parameters):"
+    FLEXIBILITY_TEST=$(curl -s -X POST "${API_BASE}/api/templates/${TEMPLATE_ID}/execute" \
         -H "Content-Type: application/json" \
         -d '{
             "business_name": "TestCorp",
@@ -169,12 +169,15 @@ if [ $? -eq 0 ] && [ "$(echo $TEMPLATES | jq length)" -gt 0 ]; then
             "business_model": "SaaS"
         }')
     
-    if echo "$VALIDATION_TEST" | jq -e '.success == false' > /dev/null; then
-        echo "✅ Story 2 validation is working (rejected invalid input)"
-        echo "   Error: $(echo $VALIDATION_TEST | jq -r '.message' | head -c 100)..."
+    if echo "$FLEXIBILITY_TEST" | jq -e '.success == true' > /dev/null; then
+        echo "✅ LLM flexibility working (accepts various input formats)"
+        echo "   - Dates as TEXT: '2025-06-01' ✓"
+        echo "   - Emails as TEXT: 'test@testcorp.com' ✓"
+        echo "   - Locations as TEXT: 'San Francisco, CA' ✓"
+        echo "   - Numbers as TEXT: '5' ✓"
     else
-        echo "⚠️  Story 2 validation may not be working (accepted invalid input)"
-        echo "   Response: $(echo $VALIDATION_TEST | jq -C '.')"
+        echo "❌ LLM flexibility test failed"
+        echo "   Error: $(echo $FLEXIBILITY_TEST | jq -r '.message' | head -c 100)..."
     fi
 else
     echo "❌ Template system failed or no templates available"

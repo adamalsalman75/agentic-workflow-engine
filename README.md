@@ -1,6 +1,7 @@
 # Agentic Workflow Engine
 
-[![codecov](https://codecov.io/gh/alsalmanp/agentic-workflow-engine/branch/main/graph/badge.svg)](https://codecov.io/gh/alsalmanp/agentic-workflow-engine)
+![Coverage](.github/badges/jacoco.svg)
+![Branches](.github/badges/branches.svg)
 
 A Spring Boot application that uses AI agents to break down complex goals into tasks, execute them, and provide comprehensive summaries. Built with Java 24, Spring AI, and OpenAI integration.
 

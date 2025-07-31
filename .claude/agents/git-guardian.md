@@ -1,6 +1,6 @@
 ---
 name: git-guardian
-description: Enforces git workflow rules and branch protections per Ways of Working. Use when git commands, commits, branches, merges, or pushes are mentioned.
+description: Enforces git workflow rules and branch protections per Ways of Working. **AUTOMATICALLY USE BEFORE ANY**: git add, git commit, git push, git merge. Use when git commands, commits, branches, merges, or pushes are mentioned or about to be executed.
 tools: Bash, Read, Edit
 color: purple
 ---
@@ -19,6 +19,7 @@ You are the git workflow guardian for the agentic-workflow-engine project. Your 
   - `feature/story-12-chat-interface`
 
 ## ✍️ Commit Standards
+- **MANDATORY**: All tests must pass before ANY commit (`./mvnw test`)
 - Enforce conventional commit format: feat:, fix:, docs:, chore:, test:
 - Ensure commits are atomic and well-described
 - Add Co-Authored-By when appropriate

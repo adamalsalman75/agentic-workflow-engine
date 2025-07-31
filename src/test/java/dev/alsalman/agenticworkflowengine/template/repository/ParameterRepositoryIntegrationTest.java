@@ -60,7 +60,7 @@ class ParameterRepositoryIntegrationTest {
             testTemplate.id(),
             "destination",
             "Travel destination",
-            ParameterType.LOCATION,
+            ParameterType.TEXT,
             true,
             null,
             0
@@ -70,7 +70,7 @@ class ParameterRepositoryIntegrationTest {
             testTemplate.id(),
             "budget",
             "Travel budget",
-            ParameterType.CURRENCY,
+            ParameterType.TEXT,
             false,
             "1000 USD",
             1
@@ -97,7 +97,7 @@ class ParameterRepositoryIntegrationTest {
             testTemplate.id(),
             "startDate",
             "Start date",
-            ParameterType.DATE,
+            ParameterType.TEXT,
             true,
             null,
             0
@@ -132,7 +132,7 @@ class ParameterRepositoryIntegrationTest {
             testTemplate.id(),
             "email",
             "Email address",
-            ParameterType.EMAIL,
+            ParameterType.TEXT,
             true,
             null,
             0
@@ -140,16 +140,16 @@ class ParameterRepositoryIntegrationTest {
         
         ParameterValidationRule rule1 = ParameterValidationRule.create(
             parameter.id(),
-            "PATTERN",
-            Map.of("pattern", "^[\\w.-]+@[\\w.-]+\\.\\w+$"),
-            "Invalid email format"
+            "REQUIRED",
+            Map.of(),
+            "Email is required"
         );
         
         ParameterValidationRule rule2 = ParameterValidationRule.create(
             parameter.id(),
-            "MIN_MAX",
-            Map.of("min", 5, "max", 100),
-            "Email must be between 5 and 100 characters"
+            "ALLOWED_VALUES",
+            Map.of("allowedValues", List.of("user@example.com", "admin@company.com")),
+            "Email must be valid"
         );
         
         // When
@@ -186,9 +186,9 @@ class ParameterRepositoryIntegrationTest {
         
         ParameterValidationRule rule = validationRuleRepository.save(ParameterValidationRule.create(
             parameter.id(),
-            "PATTERN",
-            Map.of("pattern", ".*"),
-            "Error"
+            "REQUIRED",
+            Map.of(),
+            "Parameter is required"
         ));
         
         // When
@@ -238,8 +238,8 @@ class ParameterRepositoryIntegrationTest {
         
         ParameterValidationRule rule = ParameterValidationRule.create(
             parameter.id(),
-            "PATTERN",
-            Map.of("pattern", "^test.*", "flags", "i"),
+            "REQUIRED",
+            Map.of("customMessage", "Test validation"),
             "Test validation"
         );
         
@@ -248,13 +248,11 @@ class ParameterRepositoryIntegrationTest {
         
         // Then
         assertNotNull(saved.ruleValue());
-        assertTrue(saved.ruleValue().contains("pattern"));
-        assertTrue(saved.ruleValue().contains("test.*"));
+        assertTrue(saved.ruleValue().contains("customMessage"));
         
         // Test JSON deserialization
         var ruleMap = saved.getRuleValueAsMap();
-        assertEquals("^test.*", ruleMap.get("pattern"));
-        assertEquals("i", ruleMap.get("flags"));
+        assertEquals("Test validation", ruleMap.get("customMessage"));
     }
     
     @Test
@@ -338,9 +336,9 @@ class ParameterRepositoryIntegrationTest {
         
         ParameterValidationRule rule = ParameterValidationRule.create(
             parameter.id(),
-            "RANGE",
-            Map.of("min", 0, "max", 100, "step", 1),
-            "Value must be between 0 and 100"
+            "ALLOWED_VALUES",
+            Map.of("allowedValues", List.of("0", "50", "100")),
+            "Value must be 0, 50, or 100"
         );
         
         ParameterValidationRule saved = validationRuleRepository.save(rule);
@@ -349,9 +347,11 @@ class ParameterRepositoryIntegrationTest {
         var ruleMap = saved.getRuleValueAsMap();
         
         // Then
-        assertEquals(0, ruleMap.get("min"));
-        assertEquals(100, ruleMap.get("max"));
-        assertEquals(1, ruleMap.get("step"));
+        var allowedValues = (List<?>) ruleMap.get("allowedValues");
+        assertEquals(3, allowedValues.size());
+        assertTrue(allowedValues.contains("0"));
+        assertTrue(allowedValues.contains("50"));
+        assertTrue(allowedValues.contains("100"));
     }
     
     @Test
