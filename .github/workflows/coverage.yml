@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  actions: read
+  pages: write
+
 jobs:
   coverage:
     runs-on: ubuntu-latest
@@ -47,18 +52,37 @@ jobs:
         SPRING_DATASOURCE_USERNAME: postgres
         SPRING_DATASOURCE_PASSWORD: postgres
       run: ./mvnw clean test jacoco:report
+
+    - name: Create badges directory
+      run: mkdir -p badges
       
     - name: Generate JaCoCo Badge
       id: jacoco
-      uses: cicirello/jacoco-badge-generator@v2
+      uses: cicirello/jacoco-badge-generator@v2.11.0
       with:
         generate-branches-badge: true
-        generate-summary: true
+        jacoco-csv-file: target/site/jacoco/jacoco.csv
+        badges-directory: badges
         
     - name: Log coverage percentage
       run: |
         echo "Coverage: ${{ steps.jacoco.outputs.coverage }}"
         echo "Branch coverage: ${{ steps.jacoco.outputs.branches }}"
+
+    - name: Upload coverage badges
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-badges
+        path: badges/*.svg
+        if-no-files-found: error
+        retention-days: 90
+        
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: target/site/jacoco/
+        if-no-files-found: error
         
     - name: Add coverage comment to PR
       if: github.event_name == 'pull_request'
@@ -76,17 +100,10 @@ jobs:
             - **Branch Coverage**: ${branches}%`
           })
           
-    - name: Update README with badge
+    - name: Publish badges to GitHub Pages
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add .github/badges/*
-        git diff --staged --quiet || git commit -m "Update coverage badges"
-        
-    - name: Push badge changes
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-      uses: ad-m/github-push-action@master
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: ${{ github.ref_name }}
+        folder: badges
+        branch: gh-pages
+        clean: false
